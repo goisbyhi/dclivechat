@@ -9,7 +9,119 @@ body {
     text-size-adjust: 100%;
 }
 
-main.co > .chat.fm {
+main {
+    --cw: 100vw !important;
+    --cw: 100svw !important;
+}
+
+main > .video {
+    display: none !important;
+    visibility: collapse !important;
+}
+
+main > .chat {
+    width: 100vw !important;
+    width: 100svw !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    top: 0 !important;
+}
+
+main > .chat > * {
+    width: 100vw !important;
+    width: 100svw !important;
+}
+
+main > .chat > .hd {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+main > .chat .f > .i > textarea {
+    width: calc(100vw - 100px) !important;
+    width: calc(100svw - 100px) !important;
+}
+
+main > .chat > .vp > .page {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 0 calc(24px + env(safe-area-inset-bottom));
+    align-items: stretch;
+    box-sizing: border-box;
+}
+
+main > .chat .chl,
+main > .chat .chl > .tt,
+main > .chat .cml {
+    width: calc(100% - 10px);
+}
+
+main > .chat .chl {
+    align-self: stretch;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+main > .chat .chl > .tt {
+    width: 100%;
+    padding: 9px 10px;
+    box-sizing: border-box;
+}
+
+main > .chat:not(.fm) .chl {
+    align-items: flex-start;
+}
+
+main > .chat:not(.fm) .chl > .tt {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+main > .chat:not(.fm) .chl > .tt > span {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+main > .chat:not(.fm) .chl > .tt > span * {
+    text-align: left;
+}
+
+main > .chat > .ci-c {
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0 10px calc(12px + env(safe-area-inset-bottom));
+    box-sizing: border-box;
+}
+
+main > .chat > .ci-c > .sc {
+    margin-left: auto;
+}
+
+main > .chat > .ci-c .b.gray {
+    margin: 0;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .34);
+}
+
+main > .chat > .cb-c > a {
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 999px;
+}
+
+main > .chat > .cb-c > .pd,
+main > .chat > .cb-c > .right {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+main > .chat.fm {
     width: 100vw !important;
     width: 100svw !important;
     max-width: 100vw !important;
@@ -40,23 +152,15 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
 }
 
 main.co > .chat.fm > .fm-tabs .fm-tab {
-    min-height: 36px;
-    padding: 7px 12px;
-    font-size: 13px;
+    min-height: 34px;
+    padding: 6px 11px;
+    font-size: 12px;
 }
 
 main.co > .chat.fm > .fm-tabs .fm-tab-box {
     width: 16px;
     height: 16px;
     margin-top: 0;
-}
-
-main.co > .chat.fm > .vp > .page {
-    width: 100%;
-    max-width: 100%;
-    padding: 10px 0 calc(24px + env(safe-area-inset-bottom));
-    align-items: stretch;
-    box-sizing: border-box;
 }
 
 main.co > .chat.fm .chl,
@@ -73,7 +177,7 @@ main.co > .chat.fm .chl {
 
 main.co > .chat.fm .chl > .tt {
     width: 100%;
-    padding: 9px 10px;
+    padding: 7px 10px;
     box-sizing: border-box;
 }
 
@@ -87,6 +191,7 @@ main.co > .chat.fm .chl > .tt > span {
 
 main.co > .chat.fm .chl > .tt > span .name {
     flex: 0 0 auto;
+    font-weight: 700;
 }
 
 main.co > .chat.fm .chl > .tt > span .tt {
@@ -96,36 +201,6 @@ main.co > .chat.fm .chl > .tt > span .tt {
 
 main.co > .chat.fm .chl > .tt > span .sg {
     flex: 0 0 auto;
-}
-
-main.co > .chat.fm > .ci-c {
-    flex-direction: row;
-    justify-content: flex-end;
-    padding: 0 10px calc(12px + env(safe-area-inset-bottom));
-    box-sizing: border-box;
-}
-
-main.co > .chat.fm > .ci-c > .sc {
-    margin-left: auto;
-}
-
-main.co > .chat.fm > .ci-c .b.gray {
-    margin: 0;
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, .34);
-}
-
-main.co > .chat.fm > .cb-c > a {
-    min-width: 40px;
-    min-height: 40px;
-    border-radius: 999px;
-}
-
-main.co > .chat.fm > .cb-c > .pd,
-main.co > .chat.fm > .cb-c > .right {
-    bottom: calc(10px + env(safe-area-inset-bottom));
 }
 
 @media (max-width: 520px) {
@@ -148,9 +223,13 @@ main.co > .chat.fm > .cb-c > .right {
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
-        min-height: 32px;
-        padding: 6px 10px;
+        min-height: 30px;
+        padding: 5px 10px;
         font-size: 12px;
+    }
+
+    main.co > .chat.fm .chl > .tt {
+        padding: 6px 9px;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab-box {
@@ -158,34 +237,34 @@ main.co > .chat.fm > .cb-c > .right {
         height: 14px;
     }
 
-    main.co > .chat.fm > .vp > .page {
+    main > .chat > .vp > .page {
         padding-bottom: calc(18px + env(safe-area-inset-bottom));
     }
 
-    main.co > .chat.fm .chl,
-    main.co > .chat.fm .chl > .tt,
-    main.co > .chat.fm .cml {
+    main > .chat .chl,
+    main > .chat .chl > .tt,
+    main > .chat .cml {
         width: calc(100% - 8px);
     }
 
-    main.co > .chat.fm .chl {
+    main > .chat .chl {
         padding: 0 4px;
     }
 
-    main.co > .chat.fm .chl > .tt {
+    main > .chat .chl > .tt {
         padding: 8px 9px;
     }
 
-    main.co > .chat.fm .chl > .tt > span {
+    main > .chat .chl > .tt > span {
         gap: 6px;
     }
 
-    main.co > .chat.fm .chl > .tt > span .name,
-    main.co > .chat.fm .chl > .tt > span .tt {
+    main > .chat .chl > .tt > span .name,
+    main > .chat .chl > .tt > span .tt {
         font-size: 14px;
     }
 
-    main.co > .chat.fm .chl > .tt > span .sg {
+    main > .chat .chl > .tt > span .sg {
         font-size: 10px;
     }
 }
@@ -205,14 +284,14 @@ main.co > .chat.fm > .cb-c > .right {
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tabs-wrap,
-    main.co > .chat.fm > .vp > .page {
+    main > .chat > .vp > .page {
         max-width: 860px;
         margin: 0 auto;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
-        min-height: 38px;
-        padding: 8px 14px;
+        min-height: 34px;
+        padding: 6px 12px;
         font-size: 13px;
     }
 
@@ -227,7 +306,7 @@ main.co > .chat.fm > .cb-c > .right {
     }
 
     main.co > .chat.fm .chl > .tt {
-        padding: 10px 12px;
+        padding: 8px 12px;
     }
 
     main.co > .chat.fm .chl > .tt > span .name,
@@ -246,6 +325,8 @@ main.co > .chat.fm > .cb-c > .right {
     }
 }
 `;
+    let currentDocumentHtml = () => document.documentElement?.outerHTML ?? '';
+    let looksLikeFmBoardHtml = (html = '') => /<tr\b/i.test(html) && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html);
     let createHtmlResponse = (html, status = 200) => new Response(html, {
         status,
         headers: {
@@ -270,20 +351,20 @@ main.co > .chat.fm > .cb-c > .right {
             resolve(response);
         };
         let timer = setTimeout(() => {
-            finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+            finish(createHtmlResponse(currentDocumentHtml(), 200));
         }, 15000);
 
         frame.onload = () => {
             try {
                 let html = frame.contentDocument?.documentElement?.outerHTML ?? '';
-                if (!html) html = document.documentElement?.outerHTML ?? '';
+                if (!html) html = currentDocumentHtml();
                 finish(createHtmlResponse(html, 200));
             } catch {
-                finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+                finish(createHtmlResponse(currentDocumentHtml(), 200));
             }
         };
         frame.onerror = () => {
-            finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 502));
+            finish(createHtmlResponse(currentDocumentHtml(), 502));
         };
 
         root.appendChild(frame);
@@ -334,8 +415,16 @@ main.co > .chat.fm > .cb-c > .right {
             try {
                 let response = await nativeFetch(input, init);
                 let text = await response.clone().text().catch(() => '');
-                if (response.ok && text && !fmBlockedPattern.test(text)) return response;
+                if (response.ok && text && !fmBlockedPattern.test(text) && /<tr\b/i.test(text)) return response;
             } catch {}
+
+            if (/listStyle=list/i.test(resolvedUrl)) {
+                let html = currentDocumentHtml();
+                if (looksLikeFmBoardHtml(html)) {
+                    return createHtmlResponse(html, 200);
+                }
+                return loadHtmlByFrame(location.href);
+            }
 
             return loadHtmlByFrame(resolvedUrl);
         };
