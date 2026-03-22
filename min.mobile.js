@@ -1,7 +1,9 @@
-/* dclivechat mobile build 2.4.6-20260323-mobile2 */
+/* dclivechat mobile build 2.4.6-20260323-mobile3 */
 (() => {
     let ua = navigator.userAgent || '';
     let isAndroid = /Android/i.test(ua);
+    let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
+    let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
     let mobileStyle = `
 body {
     -webkit-text-size-adjust: 100%;
@@ -245,6 +247,49 @@ main.co > .chat.fm > .cb-c > .right {
     }
 }
 `;
+    let createHtmlResponse = (html, status = 200) => new Response(html, {
+        status,
+        headers: {
+            'content-type': 'text/html; charset=utf-8',
+        },
+    });
+    let loadHtmlByFrame = (url) => new Promise((resolve) => {
+        let root = document.body || document.documentElement || document.head;
+        if (!root) return resolve(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+
+        let frame = document.createElement('iframe');
+        frame.setAttribute('aria-hidden', 'true');
+        frame.tabIndex = -1;
+        frame.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;border:0;visibility:hidden;';
+
+        let settled = false;
+        let finish = (response) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            frame.remove();
+            resolve(response);
+        };
+        let timer = setTimeout(() => {
+            finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+        }, 15000);
+
+        frame.onload = () => {
+            try {
+                let html = frame.contentDocument?.documentElement?.outerHTML ?? '';
+                if (!html) html = document.documentElement?.outerHTML ?? '';
+                finish(createHtmlResponse(html, 200));
+            } catch {
+                finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+            }
+        };
+        frame.onerror = () => {
+            finish(createHtmlResponse(document.documentElement?.outerHTML ?? '', 502));
+        };
+
+        root.appendChild(frame);
+        frame.src = url;
+    });
     let injectStyle = () => {
         if (document.getElementById('dclivechat-mobile-style')) return;
         let root = document.head || document.documentElement || document.body;
@@ -271,6 +316,30 @@ main.co > .chat.fm > .cb-c > .right {
                 configurable: true,
             });
         } catch {}
+    }
+
+    if (isFm && typeof window.fetch === 'function') {
+        let nativeFetch = window.fetch.bind(window);
+        window.fetch = async (input, init = {}) => {
+            let requestUrl = typeof input === 'string' ? input : (input?.url ?? '');
+            let method = (init?.method ?? input?.method ?? 'GET').toUpperCase();
+            let resolvedUrl = '';
+            try {
+                resolvedUrl = new URL(requestUrl, location.href).href;
+            } catch {
+                resolvedUrl = requestUrl;
+            }
+            let sameOrigin = resolvedUrl.startsWith(location.origin + '/');
+            if (!sameOrigin || method !== 'GET') return nativeFetch(input, init);
+
+            try {
+                let response = await nativeFetch(input, init);
+                let text = await response.clone().text().catch(() => '');
+                if (response.ok && text && !fmBlockedPattern.test(text)) return response;
+            } catch {}
+
+            return loadHtmlByFrame(resolvedUrl);
+        };
     }
 
     if (document.readyState === 'loading') {
