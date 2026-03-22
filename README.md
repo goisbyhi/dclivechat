@@ -19,7 +19,9 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 5. 이제 지원되는 게시판 페이지에서 이 북마크를 누르면 라이브챗이 실행됩니다.
 
 안드로이드에서는 일부 브라우저가 북마클릿 실행을 막거나 무시할 수 있습니다.
-그럴 때는 `Firefox` + `Tampermonkey` 또는 `Violentmonkey`에 [dclivechat.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.user.js)를 설치하는 방법이 가장 안정적입니다.
+`Firefox` + `Violentmonkey`를 쓴다면 기존 파일 대신 모바일 전용 [dclivechat.mobile.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.mobile.user.js)를 설치해주세요.
+기존 [dclivechat.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.user.js)는 PC 쪽 기준으로 유지됩니다.
+모바일 Firefox 계열에서 UI는 뜨는데 글이 비는 경우를 줄이기 위해, 이 파일은 모바일 브라우저에서 페이지 문맥으로 직접 실행되도록 따로 분리해 두었습니다.
 
 에펨코리아 예시:
 * `https://www.fmkorea.com/football_world`
@@ -75,6 +77,7 @@ v2.4.6-20260323
 * 에펨코리아 목록 요청에 보안 응답이나 비정상 응답이 오면 잠시 쉬었다가 다시 붙도록 백오프 추가
 * 탭을 다시 보면 에펨코리아 갱신을 즉시 다시 맞추도록 복귀 재동기화 추가
 * 에펨코리아 기본 갱신 간격을 완화해 장시간 사용 시 안정성 개선
+* Firefox 안드로이드용 모바일 전용 사용자 스크립트 `dclivechat.mobile.user.js` 추가
 
 v2.4.5-20260323
 * 에펨코리아 새 글 갱신 코드를 작업자 스레드에서도 돌 수 있게 정리
