@@ -483,6 +483,7 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
+    justify-content: flex-start;
     gap: 6px;
     width: 100%;
     min-width: 0;
@@ -975,6 +976,27 @@ main {
     }
 }
 
+main.fm {
+    --cw: 100vw;
+    --fm-page-width: min(100vw - 32px, 840px);
+    background:
+        radial-gradient(circle at top, rgba(255, 196, 0, .08), transparent 30%),
+        linear-gradient(180deg, rgba(255, 255, 255, .02), transparent 16%),
+        $colorBackgroundDark;
+
+    >.video {
+        display: none !important;
+        visibility: collapse !important;
+    }
+
+    >.chat {
+        width: 100vw;
+        width: 100svw;
+        height: 100vh;
+        height: 100svh;
+    }
+}
+
 .video {
     background: $colorBackgroundDark;
     width: calc(100% - var(--cw));    
@@ -1141,6 +1163,66 @@ main.co {
 
 $headerHeight: 50px;
 $inputHeight: 100px;
+
+.chat.fm {
+    grid-template-rows: $headerHeight auto minmax(0, 1fr) 0 0 auto;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, 0) 14%), $colorBackground;
+
+    >* {
+        width: 100vw;
+        width: 100svw;
+    }
+
+    >.hd {
+        width: 100%;
+        padding: 0 12px;
+        box-sizing: border-box;
+        background: rgba(0, 0, 0, .18);
+        backdrop-filter: blur(10px);
+    }
+
+    >.fm-tabs {
+        grid-row: 2;
+        width: 100%;
+        max-height: 132px;
+        padding: 10px 16px 8px;
+        background: rgba(0, 0, 0, .18);
+    }
+
+    >.vp {
+        grid-row: 3;
+        min-height: 0;
+        align-items: center;
+    }
+
+    >.vp > .page {
+        min-width: var(--fm-page-width);
+        max-width: var(--fm-page-width);
+        padding: 10px 0 18px;
+    }
+
+    >.cb-c {
+        grid-row: 4;
+    }
+
+    >.li-c, >.ri-c {
+        grid-row: 5;
+    }
+
+    >.ci-c {
+        grid-row: 6;
+        width: 100%;
+        padding: 0 12px 12px;
+        box-sizing: border-box;
+        justify-content: flex-end;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .24));
+    }
+
+    >.ci-c > .f {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
 
 .li-c, .ci-c {
     z-index: 2;

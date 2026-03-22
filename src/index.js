@@ -1477,17 +1477,27 @@ let matchesFmTabFilter = (subject) => {
     if (!tabs.length) return true;
     return tabs.includes(subject);
 };
-let parseFmTabs = (html) => {
-    let page = createHtmlDocument(html);
+let getFmTabTexts = (root) => {
     let nextTabs = [];
     let addTab = (text) => {
-        if (text == str_notice) return;
-        if (!text || nextTabs.includes(text)) return;
+        text = (text ?? '').trim();
+        if (!text || [str_notice, '더보기', '인기'].includes(text)) return;
+        if (nextTabs.includes(text)) return;
         nextTabs.push(text);
     };
-    for (let link of page.querySelectorAll('.bd_cnb ul.bubble > li > a.a1[data-category_srl], .bd_cnb ul.bubble > li > ul.wrp a')) {
+    for (let link of root.querySelectorAll('.bd_cnb a[data-category_srl], .bd_cnb a[href*="category="], .cnb_n_list .bd_cnb a[href*="category="]')) {
+        if (link.closest('.cnbMore')) continue;
         addTab(getNodeText(link));
     }
+    return nextTabs;
+};
+let getFmSubjectText = (root) => getNodeText(
+    root?.querySelector('td.cate a, td.cate span, .category a, .category span, [class*="cate"] a, [class*="cate"] span')
+);
+let parseFmTabs = (html) => {
+    let page = createHtmlDocument(html);
+    let nextTabs = getFmTabTexts(page);
+    if (!nextTabs.length) nextTabs = getFmTabTexts(doc);
     fmTabs = nextTabs;
 };
 
@@ -2046,6 +2056,15 @@ enterAsClick(videoInput, videoSubmit);
 let loadedVideoUrls = [];
 let videoDivs = [];
 let renderRow = () => {
+    if (isFm()) {
+        addClass(menu, hidden);
+        addClass(videoContainer, hidden);
+        addClass(videoInputContainer, hidden);
+        addClass(videoInputCloseButton, hidden);
+        removeClass(videoMain, 'go');
+        if (relocating) relocateVideoButton.click();
+        return;
+    }
     if (!bMado) {
         let newLength = Math.min(videoDivs.length, 1);
         addClass(menu, hidden);
@@ -2127,6 +2146,24 @@ let addVideo = (url) => {
 // 영상 화면에 표시하는 전역 함수를 추가
 let openLink = (string) => {
     let decoded = decodeURIComponent(string).r(/&amp;/g, '&');
+    if (isFm()) {
+        return openModal({
+            title: str_openUrlTitle,
+            desc: decoded,
+            options: [{
+                text: str_openInNew,
+                icon: 'open_in_new',
+                [onclick]: (close) => {
+                    let temp = createElement('a', null, { href: decoded, target: '_blank' });
+                    temp.click();
+                    temp.remove();
+                    close();
+                },
+                enter: true,
+            }],
+            close: true,
+        });
+    }
     openModal({
         title: str_openUrlTitle,
         desc: decoded,
@@ -2292,6 +2329,7 @@ let addVideoIframe = (url, options = {}) => {
 
 // 마지막에 시청하던 링크를 갤러리별로 저장 및 로드
 onApplyFunc['videos-' + gallId] = (videos) => {
+    if (isFm()) return;
     for (let url of videos) if (!loadedVideoUrls.includes(url)) _addVideo(url);
 }
 
@@ -2313,6 +2351,10 @@ let checkMaxOpened = () => {
 
 // 오른쪽 또는 하단에 표시될 채팅창 div
 let chatContainer = createElement(divString, main, 'chat');
+if (isFm()) {
+    addClass(main, 'fm');
+    addClass(chatContainer, 'fm');
+}
 let header = createElement(divString, chatContainer, 'hd');
 createElement(spanString, header, { [innerText]: str_chatHeader }, 'h');
 let bRefreshing = false;
@@ -3991,6 +4033,7 @@ let madoOption = createOption(str_settings_mado, 'splitscreen', () => {
     bMado = false;
     renderRow();
 }, !bMobileDevice);
+if (isFm()) addClass(madoOption, hidden);
 
 createPageSelect(str_settings_chat, optionsChat);
 let useLinkInContent = true;
@@ -4389,7 +4432,7 @@ let genUpdateList = () => {
                     if (!num) continue;
                     let postData = {
                         num: num,
-                        subject: getNodeText(row.querySelector('td.cate a, td.cate span')),
+                        subject: getFmSubjectText(row),
                         title: getNodeText(titleLink),
                         nickname: '',
                         id: '',
@@ -4417,7 +4460,7 @@ let genUpdateList = () => {
                         if (!num) continue;
                         let postData = {
                             num: num,
-                            subject: getNodeText(item.querySelector('.category a')),
+                            subject: getFmSubjectText(item),
                             title: getNodeText(item.querySelector('.ellipsis-target')) || getNodeText(titleLink),
                             nickname: getNodeText(item.querySelector('.author')).replace(/^\/\s*/, ''),
                             id: '',

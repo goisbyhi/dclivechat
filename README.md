@@ -4,7 +4,7 @@
 
 <img src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico" style="width:1em;height:1em"> [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)
 
-최신 버전: `2.4.1-20260322`
+최신 버전: `2.4.2-20260323`
 
 <br>
 
@@ -67,6 +67,12 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 <br>
 
 ## Changelog
+v2.4.2-20260323
+* 에펨코리아에서 영상 영역과 생방송 주소 입력창이 뜨지 않도록 전용 읽기 화면으로 정리
+* 에펨코리아 탭 필터를 헤더 바로 아래에 고정하고 넓은 화면에서 더 많이 보이도록 배치 개선
+* 에펨코리아 탭 파싱을 현재 문서 기준으로 보강해 다른 게시판에서 누락될 가능성 완화
+* 에펨코리아 본문 링크 클릭 시 영상 추가 대신 새 탭 열기만 제공하도록 정리
+
 v2.4.1-20260322
 * 에펨코리아 탭 선택 UI에서 `전체` 체크 표시가 더 잘 보이도록 수정
 * 긴 탭 이름이 잘리지 않도록 여러 줄 배치로 개선
