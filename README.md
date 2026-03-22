@@ -4,7 +4,7 @@
 
 <img src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico" style="width:1em;height:1em"> [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)
 
-최신 버전: `2.4.2-20260323`
+최신 버전: `2.4.3-20260323`
 
 <br>
 
@@ -67,6 +67,11 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 <br>
 
 ## Changelog
+v2.4.3-20260323
+* 에펨코리아 채팅 줄이 가운데 좁은 칼럼처럼 보이던 문제 수정
+* 에펨코리아 채팅 줄과 제목 영역을 좌측 정렬로 되돌리고 가로 폭을 거의 전체 사용하도록 조정
+* 에펨코리아 화면 톤을 기존 UI에 더 가깝게 단순화
+
 v2.4.2-20260323
 * 에펨코리아에서 영상 영역과 생방송 주소 입력창이 뜨지 않도록 전용 읽기 화면으로 정리
 * 에펨코리아 탭 필터를 헤더 바로 아래에 고정하고 넓은 화면에서 더 많이 보이도록 배치 개선

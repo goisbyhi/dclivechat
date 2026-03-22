@@ -978,11 +978,8 @@ main {
 
 main.fm {
     --cw: 100vw;
-    --fm-page-width: min(100vw - 32px, 840px);
-    background:
-        radial-gradient(circle at top, rgba(255, 196, 0, .08), transparent 30%),
-        linear-gradient(180deg, rgba(255, 255, 255, .02), transparent 16%),
-        $colorBackgroundDark;
+    --fm-page-width: calc(100vw - 24px);
+    background: $colorBackgroundDark;
 
     >.video {
         display: none !important;
@@ -1166,7 +1163,7 @@ $inputHeight: 100px;
 
 .chat.fm {
     grid-template-rows: $headerHeight auto minmax(0, 1fr) 0 0 auto;
-    background: linear-gradient(180deg, rgba(255, 255, 255, .02), rgba(255, 255, 255, 0) 14%), $colorBackground;
+    background: $colorBackground;
 
     >* {
         width: 100vw;
@@ -1177,28 +1174,30 @@ $inputHeight: 100px;
         width: 100%;
         padding: 0 12px;
         box-sizing: border-box;
-        background: rgba(0, 0, 0, .18);
-        backdrop-filter: blur(10px);
+        background: $colorBackgroundLight80;
     }
 
     >.fm-tabs {
         grid-row: 2;
         width: 100%;
-        max-height: 132px;
-        padding: 10px 16px 8px;
-        background: rgba(0, 0, 0, .18);
+        max-height: 108px;
+        padding: 8px 12px 6px;
+        background: $colorBackground;
     }
 
     >.vp {
         grid-row: 3;
         min-height: 0;
-        align-items: center;
+        align-items: flex-start;
+        justify-content: flex-start;
     }
 
     >.vp > .page {
+        width: var(--fm-page-width);
         min-width: var(--fm-page-width);
         max-width: var(--fm-page-width);
-        padding: 10px 0 18px;
+        padding: 8px 12px 18px;
+        align-items: flex-start;
     }
 
     >.cb-c {
@@ -1215,13 +1214,45 @@ $inputHeight: 100px;
         padding: 0 12px 12px;
         box-sizing: border-box;
         justify-content: flex-end;
-        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, .24));
+        background: transparent;
     }
 
     >.ci-c > .f {
         width: 100%;
         justify-content: flex-end;
     }
+}
+
+.chat.fm .chl,
+.chat.fm .chl > .tt {
+    width: 100%;
+    align-self: stretch;
+}
+
+.chat.fm .chl {
+    align-items: flex-start;
+}
+
+.chat.fm .chl > .tt {
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: row;
+    padding: 7px 10px;
+    box-sizing: border-box;
+}
+
+.chat.fm .chl > .tt > span {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    align-self: stretch;
+    flex-direction: row;
+    text-align: left;
+    row-gap: 4px;
+}
+
+.chat.fm .chl > .tt > span * {
+    text-align: left;
 }
 
 .li-c, .ci-c {
