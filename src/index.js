@@ -2352,7 +2352,7 @@ let checkMaxOpened = () => {
 // 오른쪽 또는 하단에 표시될 채팅창 div
 let chatContainer = createElement(divString, main, 'chat');
 if (isFm()) {
-    addClass(main, 'fm');
+    addClass(main, 'co');
     addClass(chatContainer, 'fm');
 }
 let header = createElement(divString, chatContainer, 'hd');
@@ -4049,7 +4049,8 @@ createOption(str_settings_hideLogin, null, () => {
     removeClass(loginInputExpander, hidden);
 });
 createOption(str_settings_lowLatency, null, () => setIntervalIndex(1), () => setIntervalIndex(0));
-createOption(str_settings_chatOnly, null, () => addClass(main, 'co'), () => removeClass(main, 'co'));
+let chatOnlyOption = createOption(str_settings_chatOnly, null, () => addClass(main, 'co'), () => removeClass(main, 'co'));
+if (isFm()) addClass(chatOnlyOption, hidden);
 
 // page: chat
 // 닉네임 아이콘 표시
@@ -4967,6 +4968,7 @@ submit.onclick = async() => {
 //#endregion
 
 loadOptions();
+if (isFm()) addClass(main, 'co');
 // populatePackage('recent');
 // populatePackage('icon');
 if (loadedVideoUrls.length !== 0) toggleMenu(false);

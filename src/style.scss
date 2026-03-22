@@ -976,24 +976,6 @@ main {
     }
 }
 
-main.fm {
-    --cw: 100vw;
-    --fm-page-width: calc(100vw - 24px);
-    background: $colorBackgroundDark;
-
-    >.video {
-        display: none !important;
-        visibility: collapse !important;
-    }
-
-    >.chat {
-        width: 100vw;
-        width: 100svw;
-        height: 100vh;
-        height: 100svh;
-    }
-}
-
 .video {
     background: $colorBackgroundDark;
     width: calc(100% - var(--cw));    
@@ -1162,42 +1144,15 @@ $headerHeight: 50px;
 $inputHeight: 100px;
 
 .chat.fm {
-    grid-template-rows: $headerHeight auto minmax(0, 1fr) 0 0 auto;
-    background: $colorBackground;
-
-    >* {
-        width: 100vw;
-        width: 100svw;
-    }
-
-    >.hd {
-        width: 100%;
-        padding: 0 12px;
-        box-sizing: border-box;
-        background: $colorBackgroundLight80;
-    }
+    grid-template-rows: auto auto 1fr 0 0 auto;
 
     >.fm-tabs {
         grid-row: 2;
-        width: 100%;
-        max-height: 108px;
-        padding: 8px 12px 6px;
-        background: $colorBackground;
     }
 
     >.vp {
         grid-row: 3;
         min-height: 0;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-
-    >.vp > .page {
-        width: var(--fm-page-width);
-        min-width: var(--fm-page-width);
-        max-width: var(--fm-page-width);
-        padding: 8px 12px 18px;
-        align-items: flex-start;
     }
 
     >.cb-c {
@@ -1210,23 +1165,9 @@ $inputHeight: 100px;
 
     >.ci-c {
         grid-row: 6;
-        width: 100%;
-        padding: 0 12px 12px;
+        padding-bottom: 12px;
         box-sizing: border-box;
-        justify-content: flex-end;
-        background: transparent;
     }
-
-    >.ci-c > .f {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-
-.chat.fm .chl,
-.chat.fm .chl > .tt {
-    width: 100%;
-    align-self: stretch;
 }
 
 .chat.fm .chl {
@@ -1236,19 +1177,12 @@ $inputHeight: 100px;
 .chat.fm .chl > .tt {
     justify-content: flex-start;
     align-items: flex-start;
-    flex-direction: row;
-    padding: 7px 10px;
-    box-sizing: border-box;
 }
 
 .chat.fm .chl > .tt > span {
-    width: 100%;
+    flex-direction: row;
     justify-content: flex-start;
     align-items: center;
-    align-self: stretch;
-    flex-direction: row;
-    text-align: left;
-    row-gap: 4px;
 }
 
 .chat.fm .chl > .tt > span * {
