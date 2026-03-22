@@ -18,6 +18,9 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 ```
 5. 이제 지원되는 게시판 페이지에서 이 북마크를 누르면 라이브챗이 실행됩니다.
 
+안드로이드에서는 일부 브라우저가 북마클릿 실행을 막거나 무시할 수 있습니다.
+그럴 때는 `Firefox` + `Tampermonkey` 또는 `Violentmonkey`에 [dclivechat.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.user.js)를 설치하는 방법이 가장 안정적입니다.
+
 에펨코리아 예시:
 * `https://www.fmkorea.com/football_world`
 * `https://www.fmkorea.com/humor`
