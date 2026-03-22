@@ -21,7 +21,9 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 안드로이드에서는 일부 브라우저가 북마클릿 실행을 막거나 무시할 수 있습니다.
 `Firefox` + `Violentmonkey`를 쓴다면 기존 파일 대신 모바일 전용 [dclivechat.mobile.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.mobile.user.js)를 설치해주세요.
 기존 [dclivechat.user.js](https://goisbyhi.github.io/dclivechat/dclivechat.user.js)는 PC 쪽 기준으로 유지됩니다.
+휴대폰에서는 기존 `dclivechat.user.js`를 꺼 두고 `dclivechat.mobile.user.js`만 켜는 것을 권장합니다.
 모바일 Firefox 계열에서 UI는 뜨는데 글이 비는 경우를 줄이기 위해, 이 파일은 모바일 브라우저에서 페이지 문맥으로 직접 실행되도록 따로 분리해 두었습니다.
+모바일 전용 파일도 에펨코리아와 디시인사이드 둘 다 지원합니다.
 
 에펨코리아 예시:
 * `https://www.fmkorea.com/football_world`
@@ -45,6 +47,7 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 
 ### 📌 지원 범위
 * 디시인사이드는 기존 기능을 그대로 지원합니다.
+* 모바일 전용 파일에서도 디시인사이드와 에펨코리아를 함께 사용할 수 있습니다.
 * 에펨코리아는 읽기 전용으로 지원합니다.
 * 에펨코리아는 글쓰기, 댓글쓰기, 쪽지 보내기 기능을 제공하지 않습니다.
 * 에펨코리아는 특정 게시판 하나만이 아니라 `mid`가 있는 다른 게시판에도 적용할 수 있습니다.

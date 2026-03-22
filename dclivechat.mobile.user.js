@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         dclivechat Mobile Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.6-20260323-mobile1
+// @version      2.4.6-20260323-mobile2
 // @description  Load the mobile-safe dclivechat build on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
@@ -21,7 +21,8 @@
     'use strict';
 
     const page = typeof unsafeWindow === 'object' && unsafeWindow ? unsafeWindow : window;
-    if (page.__dclivechat_mobile_loader_running__) return;
+    if (page.__dclivechat_loader_running__ || page.__dclivechat_mobile_loader_running__) return;
+    page.__dclivechat_loader_running__ = true;
     page.__dclivechat_mobile_loader_running__ = true;
 
     if (/^m\.fmkorea\./.test(location.host)) {
@@ -29,7 +30,18 @@
         return;
     }
 
-    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.6-20260323-mobile1';
+    if (location.host === 'm.dcinside.com') {
+        const pathMatch = location.pathname.match(/^\/(board|mini)\/([A-Za-z0-9_]+)/);
+        if (pathMatch) {
+            let gallTypePath = '';
+            if (pathMatch[1] === 'mini') gallTypePath = '/mini';
+            else if (document.getElementsByClassName('micon').length > 0) gallTypePath = '/mgallery';
+            location.replace(`https://gall.dcinside.com${gallTypePath}/board/lists?id=${pathMatch[2]}`);
+            return;
+        }
+    }
+
+    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.6-20260323-mobile2';
     const fail = () => alert('dclivechat 모바일 로더를 불러오지 못했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;
