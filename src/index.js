@@ -891,15 +891,38 @@ let genFetch = () => {
     } catch {
         _debug = debug;
     }
-    let getAsText = async (url, options = {}) => {
+    let getAsResponse = async (url, options = {}) => {
         if (!options.credentials) options.credentials = 'include';
         let res = await fetch(url, options).catch(_debug);
-        if (!res || !res.ok) return '';
-        return (await res.text().catch(_debug)).replace(/(\n|\r|\t)/g, '');
+        if (!res) return {
+            ok: false,
+            status: 0,
+            retryAfter: 0,
+            text: '',
+        };
+        let retryAfter = Number.parseInt(res.headers.get('retry-after') ?? '0') || 0;
+        let text = (await res.text().catch(_debug) ?? '').replace(/(\n|\r|\t)/g, '');
+        return {
+            ok: res.ok,
+            status: res.status,
+            retryAfter: retryAfter,
+            text: text,
+        };
     };
-    return { _TEXT: getAsText };
+    let getAsText = async (url, options = {}) => {
+        let res = await getAsResponse(url, options);
+        if (!res.ok) return '';
+        return res.text;
+    };
+    return {
+        _TEXT: getAsText,
+        _RESP: getAsResponse,
+    };
 }
-let { _TEXT: getAsText } = genFetch();
+let {
+    _TEXT: getAsText,
+    _RESP: getAsResponse,
+} = genFetch();
 
 // POST
 let postAsText = async(url, options = {}, body = '') => {
@@ -1523,7 +1546,6 @@ let validateLocation = (url) => {
         bMinor = false;
         bMini = false;
         bWriteUnavailable = true;
-        bWorkerAvailable = false;
         bMobile = /^m\./.test(location.host);
         let path = location.pathname.r(/^\/+/, '');
         let searchMid = new URL(location.href).searchParams.get('mid') ?? '';
@@ -1554,6 +1576,11 @@ let validateLocation = (url) => {
     return 1;
 }
 if (!validateLocation(location.href)) return;
+
+if (isFm()) {
+    intervalPresets = [ 10000, 5000, 3000 ];
+    interval = intervalPresets[0];
+}
 
 // 모바일 페이지에서 PC 페이지로 넘어가도록 쿠키 변경
 if (isDc()) doc.cookie = 'm_dcinside_web=done; path=/; domain=.dcinside.com';
@@ -4346,7 +4373,7 @@ let onPostData = async (postDatas, bForced = false) => {
 };
 
 let genUpdateList = () => {
-    let _debug, _url, _getAsText, _postCommentCount;
+    let _debug, _url, _getAsText, _getAsResponse, _postCommentCount;
     let _onChange, _onPostData;
     let _getInnerText, _getInnerHtml, _getOuterHtml, _getAttributeTo, _getAttribute, _testFix;
     let _str_survey, _str_notice;
@@ -4357,6 +4384,7 @@ let genUpdateList = () => {
         _debug = _DEBUG;
         _url = _URL;
         _getAsText = _TEXT;
+        _getAsResponse = _RESP;
         _postCommentCount = {};
         _onChange = (n, c) => {
             _postCommentCount[n] = c;
@@ -4378,6 +4406,7 @@ let genUpdateList = () => {
         _debug = debug;
         _url = getListUrl();
         _getAsText = getAsText;
+        _getAsResponse = getAsResponse;
         _postCommentCount = postCommentCount;
         _onChange = (n, c) => onPostCommentCountChanged[n]?.(c, bFirstUpdate);
         _onPostData = onPostData;
@@ -4480,13 +4509,33 @@ let genUpdateList = () => {
         return info;
     };
     let isFmNoticeRow = (row) => /\bnotice\b/.test(getAttrLoose(row, 'class'));
+    let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
+    let fmNextUpdateAt = 0;
+    let fmFailureCount = 0;
     let updateList = async () => {
-        let text = await _getAsText(_url);
-        if (!text) return;
         try {
-            text = text.replace(/(\n|\r|\t)/g, ''); // use replace instead of r due to worker compatibility
             let postDatas = [];
             if (_siteMode == 'fmkorea') {
+                let now = Date.now();
+                if (now < fmNextUpdateAt) return;
+                let response = await _getAsResponse(_url);
+                let text = response.text;
+                let blocked = !response.ok || fmBlockedPattern.test(text);
+                if (blocked) {
+                    fmFailureCount++;
+                    let waitSeconds = response.retryAfter;
+                    if (!waitSeconds) {
+                        let baseSeconds = (response.status == 429 || response.status == 430) ? 60 : 15;
+                        waitSeconds = Math.min(baseSeconds * fmFailureCount, 300);
+                    }
+                    fmNextUpdateAt = now + (waitSeconds * 1000);
+                    _debug('fm update paused', response.status, waitSeconds);
+                    return;
+                }
+                fmFailureCount = 0;
+                fmNextUpdateAt = 0;
+                if (!text) return;
+                text = text.replace(/(\n|\r|\t)/g, ''); // use replace instead of r due to worker compatibility
                 let updateCount = (postData, count) => {
                     let lastCount = _postCommentCount[postData.num] ?? 0;
                     if (count) postData.count = count;
@@ -4528,6 +4577,9 @@ let genUpdateList = () => {
                 await _onPostData(postDatas);
                 return;
             }
+            let text = await _getAsText(_url);
+            if (!text) return;
+            text = text.replace(/(\n|\r|\t)/g, ''); // use replace instead of r due to worker compatibility
             let matches = text.matchAll(/<tr[^>]*class="[^"]*us-post[^"]*"[^>]*data-no="([^"]*)".+?<\/tr>/g);
             if (!matches) return;
             for (let match of matches) {
@@ -4627,7 +4679,7 @@ let initUpdate = (...reason) => {
             `let _SS='${str_survey}';`,
             `let _SN='${str_notice}';`,
             `let{_IH,_OH,_IT,_AT,_A,_TF,_DEBUG}=(${genUtil.toString()})();`,
-            `let{_TEXT}=(${genFetch.toString()})();`,
+            `let{_TEXT,_RESP}=(${genFetch.toString()})();`,
             `let{_UL}=(${genUpdateList.toString()})();`,
             `let{_UC}=(${genUpdateFunc.toString()})();`,
             `self.onmessage=async(e)=>{switch(e.data.type){case'iv':_IV=e.data.iv;break;case'ln':_LN=e.data.n;break;}};`,
@@ -4655,6 +4707,15 @@ let initUpdate = (...reason) => {
 
 // 업데이트 시작
 initUpdate();
+if (isFm()) {
+    let scheduleVisibleRefresh = () => {
+        if (doc.hidden) return;
+        timeout(() => initUpdate('visible'), 300);
+    };
+    doc.addEventListener('visibilitychange', scheduleVisibleRefresh);
+    window.addEventListener('focus', scheduleVisibleRefresh);
+    window.addEventListener('pageshow', scheduleVisibleRefresh);
+}
 
 // 글 쓰기
 let formData = {
