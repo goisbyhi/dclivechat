@@ -1,48 +1,60 @@
 <h1><img alt="DC 라이브챗" src="https://github.com/Joh1ah/dclivechat/blob/main/images/dclivechat_h.png"/></h1>
 
-디시인사이드를 실시간 채팅창으로 바꿔주는 북마크렛입니다.
+디시인사이드와 에펨코리아 게시판을 실시간 채팅창처럼 볼 수 있게 해주는 북마클릿입니다.
 
 <img src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico" style="width:1em;height:1em"> [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)
 
-최신 버전: `2.3.0-20231023`
+최신 버전: `2.4.0-20260322`
 
 <br>
 
 ## 적용법
-1. PC 또는 모바일 브라우저에 아무 북마크나 추가하세요.
-2. 북마크 URL란에 아래 코드를 복사해 넣으세요.
+1. 이 저장소를 본인 계정으로 올린 뒤 `min.js`가 웹에서 열리게 준비하세요.
+2. 가장 간단한 방법은 GitHub Pages를 켜서 `https://<GitHub 아이디>.github.io/dclivechat/min.js` 형태의 주소를 만드는 것입니다.
+3. PC 또는 모바일 브라우저에 아무 북마크나 하나 추가하세요.
+4. 북마크 URL란에 아래 코드를 복사해 넣으세요.
 ```javascript
-javascript:(()=>{fetch('https://joh1ah.github.io/dclivechat/min.js').then(res=>res.text().then(text=>eval(text))).catch(()=>alert('error'))})();
+javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js').then(res=>res.text().then(text=>eval(text))).catch(()=>alert('error'))})();
 ```
-3. 이제 이 북마크를 누르면 DC 라이브챗이 실행됩니다.
+5. 이제 지원되는 게시판 페이지에서 이 북마크를 누르면 라이브챗이 실행됩니다.
+
+에펨코리아 예시:
+* `https://www.fmkorea.com/football_world`
+* `https://www.fmkorea.com/humor`
+* `https://www.fmkorea.com/free`
 
 ![DC 라이브챗 스크린샷](https://github.com/Joh1ah/dclivechat/blob/main/images/screenshot_0.gif)
 
 <br>
 
 ## 주요 기능
-### 💬 실시간 채팅
-* 갤러리 페이지를 일일이 새로고침 하지 않아도 됩니다.
-* 글 리젠이 빠른 갤러리 여러 곳을 동시에 볼 수 있습니다.
+### 💬 실시간 목록 보기
+* 게시판을 새로고침하지 않아도 새 글이 채팅처럼 아래에 붙습니다.
+* 글 제목을 누르면 본문과 댓글을 바로 펼쳐서 볼 수 있습니다.
+* 여러 게시글을 동시에 열어둘 수 있습니다.
 
-### 📺 방송과 함께 보기
-* 방송 화면을 원하는 만큼 여러개 열어두고 동시에 시청할 수 있습니다.
-* 글을 쓸 때 방송 링크가 자동 추가됩니다. (설정에서 on/off 가능)
-* 갤러리마다 이전에 보던 방송이 저장됩니다.
+### 🏷️ 에펨코리아 탭 필터
+* 에펨코리아는 게시판 탭을 자동으로 읽어옵니다.
+* `전체` 탭을 포함해 원하는 탭만 골라서 볼 수 있습니다.
+* 글 제목 앞에 현재 탭 이름이 작은 표시로 붙습니다.
 
-### 📱 공앱만큼 편한 기능
-* 여러줄 입력 시 첫 줄은 제목, 나머지는 내용이 됩니다.
-* 이미지를 드래그 앤 드롭으로 올릴 수 있습니다.
-* 내가 쓴 글이나 댓글에 답이 달리면 알림이 표시됩니다.
+### 📌 지원 범위
+* 디시인사이드는 기존 기능을 그대로 지원합니다.
+* 에펨코리아는 읽기 전용으로 지원합니다.
+* 에펨코리아는 글쓰기, 댓글쓰기, 쪽지 보내기 기능을 제공하지 않습니다.
+* 에펨코리아는 특정 게시판 하나만이 아니라 `mid`가 있는 다른 게시판에도 적용할 수 있습니다.
 
 <br>
 
 ## FAQ
 ### <i>실행이 되지 않아요</i>
-* URL란이 제대로 수정되었는지 확인해보세요.<br>만약 수정한 URL이 저장되지 않았다면, 북마크렛 기능을 지원하지 않는 브라우저일 수 있습니다.
-* 그래도 해결되지 않을 때에는 [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)에 제보해주세요.
+* URL란이 제대로 수정되었는지 확인해보세요.<br>특히 `min.js` 주소가 본인이 올린 주소인지 다시 확인해보세요.
+* 수정한 URL이 저장되지 않았다면, 북마클릿 기능을 막는 브라우저일 수 있습니다.
 ### <i>방송이 보이지 않아요</i>
 * 타 사이트에서의 시청이 금지된 영상은 볼 수 없습니다. (유튜브 멤버십 한정 방송 등)<br>단, 영상 링크는 정상적으로 추가됩니다.
+### <i>에펨코리아에서는 왜 입력창이 없나요?</i>
+* 에펨코리아는 읽기 전용으로만 붙여두었습니다.
+* 글쓰기, 댓글쓰기, 쪽지 기능은 일부러 빼 두었습니다.
 ### <i>소스코드를 보고싶어요</i>
 * [index.js](https://github.com/Joh1ah/dclivechat/blob/main/src/index.js)와 [style.scss](https://github.com/Joh1ah/dclivechat/blob/main/src/style.scss)를 확인해주세요.
 * 빌드된 각 버전은 [최신 릴리스](https://github.com/Joh1ah/dclivechat/releases)에서 찾아볼 수 있습니다.
@@ -55,6 +67,13 @@ javascript:(()=>{fetch('https://joh1ah.github.io/dclivechat/min.js').then(res=>r
 <br>
 
 ## Changelog
+v2.4.0-20260322
+* 에펨코리아 읽기 전용 지원 추가
+* 에펨코리아 게시판 탭 필터 추가
+* `전체` 탭 선택 추가
+* 글 제목 앞 작은 탭 표시 추가
+* 해외축구 외 다른 에펨코리아 게시판 지원 개선
+
 v2.3.0-20231023
 * 글/댓글 삭제 기능 추가
 * 키워드/ID/IP/닉네임 차단 기능 추가

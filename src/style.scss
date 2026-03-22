@@ -20,6 +20,7 @@ $colorHighlightLight: #8c62a8;
 $colorWarning: #d42727;
 
 $shadowWidth: 2px;
+$border: 1px solid $colorForeground20;
 
 * {
     text-align: center;
@@ -466,6 +467,47 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
     }
 }
 
+.fm-tabs {
+    width: calc(100% - 16px);
+    padding: 6px 8px 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: rgba(0, 0, 0, .08);
+    border-bottom: $border;
+    box-sizing: border-box;
+}
+
+.fm-tabs-wrap {
+    display: flex;
+    gap: 6px;
+    min-width: max-content;
+}
+
+.fm-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: $colorBackgroundDarker;
+    color: $colorForegroundDark;
+    font-size: 12px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: all .2s;
+
+    &:hover {
+        background: $colorBackgroundLight;
+        color: $colorForeground;
+    }
+
+    &.chk {
+        background: rgba(255, 196, 0, .16);
+        border-color: rgba(255, 196, 0, .4);
+        color: #ffd46b;
+    }
+}
+
 .ex {
     display: flex;
     width: 100%;
@@ -569,6 +611,10 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
     align-items: baseline;
     align-self: center;
     border-radius: 4px;
+
+    &.filtered {
+        display: none !important;
+    }
     
     >.tt {
         cursor: pointer;
@@ -576,6 +622,21 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
         padding: 5px 6px;
         >span {
             width: 100%;
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            .sg {
+                display: inline-flex;
+                align-items: center;
+                padding: 1px 6px 0;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, .08);
+                color: $colorForegroundDark;
+                font-size: 11px;
+                line-height: 1.4;
+                vertical-align: middle;
+            }
             .cm {
                 display: inline-flex;
                 height: 1em;

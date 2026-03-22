@@ -16,6 +16,8 @@ String.prototype.r = function(regex, string) {
     return this.replace(regex, string);
 }
 
+let DEBUG = false;
+
 //#region 특수문자 문자열 셋
 
 let decoder = new TextDecoder();
@@ -314,6 +316,9 @@ let regexYoutubeLink = /href="(https?:\/\/)?(www.)?youtu(.be\/|be.com\/watch\?v=
 
 // 자주 쓰이는 URL
 let https = 'https://';
+let siteDc = 'dc';
+let siteFm = 'fmkorea';
+let siteMode = siteDc;
 let origin = 'gall.dcinside.com/';
 let host = https + origin;
 let helpUrl = https +'github.com/Joh1ah/dclivechat';
@@ -346,6 +351,8 @@ let gallType = '';
 let rKey = '';
 let gallNum = '';
 let gallName = '';
+let fmTabs = [];
+let selectedFmTabs = [];
 let bMobile = false;
 let bMinor = true;
 let bMini = false;
@@ -397,6 +404,8 @@ let loop = null;
 let worker = null;
 
 // 전역 변수 매크로
+let isDc = () => siteMode == siteDc;
+let isFm = () => siteMode == siteFm;
 let isPostingWrite = () => (targetPostNum == 0);
 let isCaptcha = () => {
     if (isPostingWrite()) return bCaptcha;
@@ -594,7 +603,10 @@ let createElement = (tagName, parent, attr, ...classes) => {
         else if (typeof attr == 'string') classes.push(attr);
     }
     for (let className of classes) {
-        element.classList.add(...className.split('.'));
+        if (!className) continue;
+        let classList = className.split('.').filter(item => item);
+        if (!classList.length) continue;
+        element.classList.add(...classList);
     }
     if (parent && parent.appendChild) parent.appendChild(element);
     return element;
@@ -633,12 +645,30 @@ let enterAsClick = (input, submit, bShift = false, bForce = false) => {
 };
 
 // URL 매크로
-let getBoardUrl = () => host + (bMinor ? 'mgallery/' : (bMini ? 'mini/' : '')) + 'board/';
-let getBoardUrlPlain = () => host + 'board/';
-let getListUrl = () => getBoardUrl() + 'lists?id=' + gallId;
-let getWriteUrl = () => getBoardUrl() + 'write/?id=' + gallId;
-let getPostUrl = (num) => getBoardUrl() + 'view/?id=' + gallId + '&no=' + num;
-let getDeleteUrl = (num) => getBoardUrl() + 'delete/?id=' + gallId + '&no=' + num;
+let getBoardUrl = () => {
+    if (isFm()) return host;
+    return host + (bMinor ? 'mgallery/' : (bMini ? 'mini/' : '')) + 'board/';
+};
+let getBoardUrlPlain = () => {
+    if (isFm()) return host;
+    return host + 'board/';
+};
+let getListUrl = () => {
+    if (isFm()) return host + 'index.php?mid=' + gallId + '&listStyle=list';
+    return getBoardUrl() + 'lists?id=' + gallId;
+};
+let getWriteUrl = () => {
+    if (isFm()) return host + 'index.php?mid=' + gallId + '&act=dispBoardWrite';
+    return getBoardUrl() + 'write/?id=' + gallId;
+};
+let getPostUrl = (num) => {
+    if (isFm()) return host + num;
+    return getBoardUrl() + 'view/?id=' + gallId + '&no=' + num;
+};
+let getDeleteUrl = (num) => {
+    if (isFm()) return '';
+    return getBoardUrl() + 'delete/?id=' + gallId + '&no=' + num;
+};
 
 // Fetch
 let serializeForm = (...datas) => {
@@ -1358,6 +1388,109 @@ let updateFormDataV3 = (text, data) => {
     }
 };
 
+let createHtmlDocument = (html) => new DOMParser().parseFromString(html, 'text/html');
+let getNodeText = (node) => (node?.textContent ?? '').r(/\s+/g, ' ').trim();
+let decodeTextSafe = (string = '') => {
+    try {
+        return unescapeEmoji(decodeURIComponent(string));
+    } catch {
+        return unescapeEmoji(string);
+    }
+};
+let appendClassName = (string, className) => {
+    let classes = (string ?? '').split(' ').filter(item => item);
+    if (!classes.includes(className)) classes.push(className);
+    return classes.join(' ');
+};
+let resolveSiteUrl = (url) => {
+    if (!url) return '';
+    try {
+        return new URL(url, location.origin).href;
+    } catch {
+        return url;
+    }
+};
+let getOpenLinkScript = (encoded) => `window.postMessage(JSON.stringify({type:'${openLinkFuncName}',url:'${encoded}' }),'*')`;
+let getImageClickScript = (src, id) => `window.postMessage(JSON.stringify({type:'${onImageClickFuncName}',src:'${src}',id:'${id}'}))`;
+let transformContentHtml = (string, id) => {
+    if (isDc()) return replaceImage(replaceLink(trimHtml(neutralizeDccon(string))), id);
+    let page = createHtmlDocument('<div id="fm-content-root">' + string + '</div>');
+    let root = page[querySelector]('#fm-content-root');
+    if (!root) return trimHtml(string);
+    for (let link of root.querySelectorAll('a[href]')) {
+        let href = resolveSiteUrl(link.getAttribute('href'));
+        link.setAttribute('href', 'javascript:;');
+        link.setAttribute('target', '_blank');
+        link.setAttribute('onclick', getOpenLinkScript(encode(href)));
+    }
+    for (let img of root.querySelectorAll('img')) {
+        let src = resolveSiteUrl(img.getAttribute('src') || img.getAttribute('data-src'));
+        if (!src) continue;
+        img.setAttribute('src', src);
+        img.setAttribute('data-osrc', src);
+        img.setAttribute('draggable', 'false');
+        img.setAttribute('onclick', getImageClickScript(src, id));
+        img.setAttribute('class', appendClassName(img.getAttribute('class'), 'img'));
+    }
+    for (let video of root.querySelectorAll('video')) {
+        let src = video.getAttribute('src');
+        if (src) video.setAttribute('src', resolveSiteUrl(src));
+        let poster = video.getAttribute('poster');
+        if (poster) video.setAttribute('poster', resolveSiteUrl(poster));
+        video.setAttribute('controls', 'controls');
+        video.setAttribute('playsinline', 'playsinline');
+    }
+    for (let source of root.querySelectorAll('source[src]')) {
+        source.setAttribute('src', resolveSiteUrl(source.getAttribute('src')));
+    }
+    return trimHtml(root.innerHTML);
+};
+let getFmDocumentNum = (href) => {
+    if (!href) return 0;
+    let match = href.match(/(?:document_srl=|\/)([0-9]+)(?:$|[\/?#&])/);
+    if (!match) return 0;
+    return parse(match[1]);
+};
+let getFmMemberInfo = (link) => {
+    let info = {
+        id: '',
+        name: '',
+        img: '',
+        fix: false,
+    };
+    if (!link) return info;
+    info.name = getNodeText(link);
+    let classMatch = (link.className ?? '').match(/member_([0-9]+)/);
+    if (classMatch) info.id = classMatch[1];
+    let image = link[querySelector]('img');
+    if (image?.src) {
+        info.img = resolveSiteUrl(image.src);
+        info.fix = testFix(info.img);
+    }
+    return info;
+};
+let getFmTabOptionKey = () => 'fmkorea-tabs-' + gallId;
+let getSelectedFmTabs = () => selectedFmTabs.filter(item => item);
+let matchesFmTabFilter = (subject) => {
+    if (!isFm()) return true;
+    let tabs = getSelectedFmTabs();
+    if (!tabs.length) return true;
+    return tabs.includes(subject);
+};
+let parseFmTabs = (html) => {
+    let page = createHtmlDocument(html);
+    let nextTabs = [];
+    let addTab = (text) => {
+        if (text == str_notice) return;
+        if (!text || nextTabs.includes(text)) return;
+        nextTabs.push(text);
+    };
+    for (let link of page.querySelectorAll('.bd_cnb ul.bubble > li > a.a1[data-category_srl], .bd_cnb ul.bubble > li > ul.wrp a')) {
+        addTab(getNodeText(link));
+    }
+    fmTabs = nextTabs;
+};
+
 //#endregion
 
 // #####################################################################
@@ -1372,6 +1505,27 @@ let onInvalidPage = (reason) => {
     return 0;
 };
 let validateLocation = (url) => {
+    let fmMatch = url.match(/^https?:\/\/((m|www)\.)?fmkorea\.(com|net|co\.kr)\/([^\n]*)$/);
+    if (fmMatch) {
+        siteMode = siteFm;
+        origin = location.host + '/';
+        host = location.origin + '/';
+        bMinor = false;
+        bMini = false;
+        bWriteUnavailable = true;
+        bWorkerAvailable = false;
+        bMobile = /^m\./.test(location.host);
+        let path = location.pathname.r(/^\/+/, '');
+        let searchMid = new URL(location.href).searchParams.get('mid') ?? '';
+        gallId = searchMid;
+        if (!gallId) {
+            if (/^[A-Za-z0-9_]+$/.test(path)) gallId = path;
+            else gallId = window.currentBoardMid ?? window.current_mid ?? '';
+        }
+        gallName = window.currentBoardTitle ?? doc.title.r(/ - 에펨코리아$/, '') ?? gallId;
+        if (!gallId) return onInvalidPage(str_noGalleryPageUrl);
+        return 1;
+    }
     let match = url.match(/^https?:\/\/(gall|m).dcinside.com\/([^\n]+)$/);
     if (!match) return onInvalidPage(str_noGalleryUrl);
     let idMatch = null;
@@ -1392,7 +1546,7 @@ let validateLocation = (url) => {
 if (!validateLocation(location.href)) return;
 
 // 모바일 페이지에서 PC 페이지로 넘어가도록 쿠키 변경
-doc.cookie = 'm_dcinside_web=done; path=/; domain=.dcinside.com';
+if (isDc()) doc.cookie = 'm_dcinside_web=done; path=/; domain=.dcinside.com';
 
 // 모바일 뷰포트 변경
 createElement('meta', head, { name:'viewport', content: 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0' });
@@ -1402,7 +1556,8 @@ createElement('meta', head, { name:'viewport', content: 'width=device-width, ini
 
 if (bMobile) {
     onInvalidPage(str_noSupportMobile);
-    return location.href = getListUrl();
+    if (isDc()) return location.href = getListUrl();
+    return;
 }
 
 // DC 라이브챗이 이미 실행중인지 확인
@@ -1521,25 +1676,33 @@ let removeBlock = (o, key, keyword) => {
 
 (async() => {
     let html = await getAsText(getListUrl()).catch(debug);
-    let loginBox = getInnerHtml(html, divString, 'login_box');
-    if (DEBUG) debug('login', loginBox);
-    if (loginBox) {
-        let string = getInnerHtml(loginBox, 'button', 'btn_inout');
-        if (DEBUG) debug('string', string);
-        if (string && string == str_logout) {
-            bLogin = true;
-            let nickname = getInnerText(loginBox, 'strong', 'nickname');
-            if (nickname) userNickname = nickname;
-            let nikcon = getOuterHtml(loginBox, 'strong', 'writer_nikcon');
-            if (nikcon) {
-                let match = getAttribute(nikcon, 'onClick').match(/\/([a-zA-Z0-9_-]+)['"]/);
-                if (match) userId = match[1];
-                match = nikcon.match(/src=["']([^"']+)["']/);
-                if (match) {
-                    userImg = match[1];
-                    bUserFix = testFix(match[1]);
+    if (isFm()) {
+        parseFmTabs(html);
+        let page = createHtmlDocument(html);
+        bLogin = page.querySelector('a[href*="dispMemberLogout"]') != null;
+        if (!gallName) gallName = window.currentBoardTitle ?? getNodeText(page.querySelector('.bd_cnb .home')) ?? gallId;
+        if (!gallName) gallName = gallId;
+    } else {
+        let loginBox = getInnerHtml(html, divString, 'login_box');
+        if (DEBUG) debug('login', loginBox);
+        if (loginBox) {
+            let string = getInnerHtml(loginBox, 'button', 'btn_inout');
+            if (DEBUG) debug('string', string);
+            if (string && string == str_logout) {
+                bLogin = true;
+                let nickname = getInnerText(loginBox, 'strong', 'nickname');
+                if (nickname) userNickname = nickname;
+                let nikcon = getOuterHtml(loginBox, 'strong', 'writer_nikcon');
+                if (nikcon) {
+                    let match = getAttribute(nikcon, 'onClick').match(/\/([a-zA-Z0-9_-]+)['"]/);
+                    if (match) userId = match[1];
+                    match = nikcon.match(/src=["']([^"']+)["']/);
+                    if (match) {
+                        userImg = match[1];
+                        bUserFix = testFix(match[1]);
+                    }
+                    
                 }
-                
             }
         }
     }
@@ -1547,7 +1710,7 @@ let removeBlock = (o, key, keyword) => {
     onLoginChecked?.();
 
     // gall name
-    gallName = getValueById(html, 'gallery_name');
+    if (isDc()) gallName = getValueById(html, 'gallery_name');
     blockGallLabel[innerText] = str_blockGall + ' - ' + gallName;
 })();
 
@@ -2168,6 +2331,7 @@ let refresh = createElement('a', header, {
 let refreshIcon = createIcon(refresh, 'sync');
 let help = createElement('a', header, { href: helpUrl, target: '_blank' }, 'help.b.abs-tr');
 createIcon(help, 'help');
+let fmTabFilterContainer = createElement(divString, chatContainer, 'fm-tabs', hidden);
 let chatViewport = createElement(divString, chatContainer, 'vp');
 let chatPage = createElement(divString, chatViewport, 'page');
 let chatBottomContainer = createElement(divString, chatContainer, 'cb-c');
@@ -2356,10 +2520,48 @@ let postContentDatas = {};
 let postCommentCount = {};
 let onPostCommentCountChanged = {};
 let postCommentDatas = {};
+let renderFmTabFilter;
+let applyFmTabFilter;
+
+let applyLineFilter = (lineData) => {
+    if (!lineData?.chat) return;
+    if (!matchesFmTabFilter(lineData.subject ?? '')) addClass(lineData.chat, 'filtered');
+    else removeClass(lineData.chat, 'filtered');
+};
+applyFmTabFilter = () => {
+    for (let lineData of chatLines) applyLineFilter(lineData);
+    pullDown(true);
+};
+renderFmTabFilter = () => {
+    if (!isFm() || !fmTabs.length) {
+        addClass(fmTabFilterContainer, hidden);
+        return;
+    }
+    clearChildren(fmTabFilterContainer);
+    removeClass(fmTabFilterContainer, hidden);
+    let tabs = createElement(divString, fmTabFilterContainer, 'fm-tabs-wrap');
+    let renderEntry = (label, checked, onclickFunc) => {
+        let entry = createElement('a', tabs, {
+            [onclick]: onclickFunc,
+            [innerText]: label,
+        }, 'fm-tab', checked ? 'chk' : '');
+        return entry;
+    };
+    renderEntry('전체', getSelectedFmTabs().length == 0, () => applyOption(getFmTabOptionKey(), ''));
+    for (let tab of fmTabs) {
+        renderEntry(tab, getSelectedFmTabs().includes(tab), () => {
+            let next = getSelectedFmTabs();
+            if (next.includes(tab)) splice(next, tab);
+            else next.push(tab);
+            applyOption(getFmTabOptionKey(), next.join('||'));
+        });
+    }
+};
 
 let showLine = (div) => {
-    if (!bPullDown) setNewPostCount(newPostCount + 1);
     removeClass(div, hidden);
+    if (div.classList.contains('filtered')) return;
+    if (!bPullDown) setNewPostCount(newPostCount + 1);
     pullDown(true);
 }
 let newLine = async (postData) => {
@@ -2371,7 +2573,8 @@ let newLine = async (postData) => {
     let inline = createElement(spanString, titleDiv);
     let name = postData.nickname;
     let ip = postData.ip;
-    let title = unescapeEmoji(decodeURIComponent(postData.title));
+    let title = decodeTextSafe(postData.title);
+    let subject = decodeTextSafe(postData.subject);
     let id = postData.id;
     let img = postData.img;
     let fix = postData.fix;
@@ -2385,14 +2588,17 @@ let newLine = async (postData) => {
     chatLines.push({
         chat: line,
         title: title,
+        subject: subject,
         id: id,
         ip: ip,
         nickname: name
     });
+    applyLineFilter(chatLines[chatLines.length - 1]);
 
     if (name) createWriter(inline, name, id, ip, img, fix);
     else addClass(line, 'notify'); // 이름이 주어지지 않으면 알림 메시지로 취급
 
+    if (subject) createElement(spanString, inline, { [innerText]: subject }, 'sg');
     let titleSpan = createElement(spanString, inline, { [innerText]: title }, 'tt');
 
     // 디시콘
@@ -2526,6 +2732,7 @@ let newLine = async (postData) => {
                 else setTarget(num, line, inputCommentSpan);
             }
         }, 'ic.r');
+        if (isFm()) addClass(inputComment, hidden);
         let inputCommentSpan = createElement(spanString, inputComment, {
             [innerText]: str_writeComment,
         });
@@ -2581,7 +2788,7 @@ let newLine = async (postData) => {
                 } else {
                     checkAddNotification(num, targetNum, commentEntry);
                 }
-                commentEntry.onclick = () => setTarget(num, line, inputCommentSpan, commentEntry, targetNum ? targetNum : comment.num, comment.name, targetName);
+                if (!isFm()) commentEntry.onclick = () => setTarget(num, line, inputCommentSpan, commentEntry, targetNum ? targetNum : comment.num, comment.name, targetName);
                 if (commentWrappers[targetNum] == undefined) {
                     commentWrappers[comment.num] = commentWrapper;
                     commentWrapper.appendChild(commentEntry);
@@ -2640,7 +2847,7 @@ let newLine = async (postData) => {
                         openAlert(str_error_generic);
                     }
                 }];
-                if (my || ip || myComment || comment.ip || comment.id == userId) addContextMenu(commentEntry, contextOptions);
+                if (isDc() && (my || ip || myComment || comment.ip || comment.id == userId)) addContextMenu(commentEntry, contextOptions);
             }
             checkAnyMore();
             pullDown(true);
@@ -2728,7 +2935,7 @@ let newLine = async (postData) => {
 
     // context menu
     let contextOptions = [];
-    if (my || ip || (bLogin && id == userId)) contextOptions.push({
+    if (isDc() && (my || ip || (bLogin && id == userId))) contextOptions.push({
         text: str_delete,
         icon: 'delete',
         [onclick]: () => {
@@ -2967,6 +3174,12 @@ let renderInputCaptcha = async () => {
 let refreshWriteSession;
 
 onLoginChecked = () => {
+    if (isFm()) {
+        addClass(loginInfoContainer, hidden);
+        renderFmTabFilter?.();
+        refreshWriteSession?.();
+        return;
+    }
     if (!bLogin && !getOption(str_settings_hideLogin)) {
         removeClass(loginInputContainer, hidden);
         removeClass(loginInputExpander, hidden);
@@ -3685,7 +3898,8 @@ createBlockOption(str_block_ip, optionsBlock, false, 'ip');
 createBlockOption(str_block_name, optionsBlock, false, 'nick');
 
 // optionsWrite page
-createPageSelect(str_settings_write, optionsWrite);
+let writeSettingsPage = createPageSelect(str_settings_write, optionsWrite);
+if (isFm()) addClass(writeSettingsPage, hidden);
 let uploadZzal = createElement('input', null, {
     type: 'file',
     accept: 'image/*',
@@ -3820,6 +4034,12 @@ createOptionProperty(str_settings_smallDccon, null, dcconSizeName, '60px', '80px
 
 // footer
 createElement(spanString, settingsPanel, { [innerText]: 'version: ' + VERSION }, 'version');
+onApplyFunc[getFmTabOptionKey()] = (value) => {
+    selectedFmTabs = split(value ?? '').filter(item => item);
+    renderFmTabFilter?.();
+    applyFmTabFilter?.();
+};
+if (isFm()) _applyOption(getFmTabOptionKey(), getOption(getFmTabOptionKey()) ?? '');
 
 let settingsHidden = true;
 toggleSettings = () => {
@@ -3868,6 +4088,20 @@ let getPostContent = async (num, bForce = false) => {
         vCurT: '',
         // recomFormData : null,
     };
+    if (isFm()) {
+        let text = await getAsText(getPostUrl(num)).catch(debug);
+        if (!text) return contentData;
+        let page = createHtmlDocument(text);
+        let writer = page.querySelector('.rd_hd .btm_area .side a.member_plate, .rd_hd a.member_plate');
+        let content = page.querySelector('.rd_body article .xe_content, .rd_body .xe_content');
+        if (!content) return contentData;
+        let member = getFmMemberInfo(writer);
+        contentData.name = member.name;
+        contentData.write = content.innerHTML;
+        contentData.text = transformContentHtml(content.innerHTML, 'pc-' + num);
+        postContentDatas[num] = contentData;
+        return contentData;
+    }
     let text = await getAsText(getPostUrl(num)).catch(debug);
 
     let returnFunc = () => contentData;
@@ -3884,7 +4118,7 @@ let getPostContent = async (num, bForce = false) => {
     if (!writer) return returnFunc();
     contentData.name = getAttribute(writer, 'data-nick');
     contentData.write = write;
-    contentData.text = replaceImage(replaceLink(trimHtml(neutralizeDccon(write))), 'pc-' + num);
+    contentData.text = transformContentHtml(write, 'pc-' + num);
     let esno = getValueById(text, 'e_s_n_o');
     if (esno) contentData.esno = esno;
     contentData.string = getSecretString(text);
@@ -3970,6 +4204,37 @@ let _getPostComment = async (num, postData, commentData) => {
     return true;
 }
 let getPostComment = async (num) => {
+    if (isFm()) {
+        let text = await getAsText(getPostUrl(num)).catch(debug);
+        let lastCount = postCommentCount[num];
+        let commentData = {
+            count: lastCount,
+            num: 0,
+            comments: {},
+        };
+        if (!text) return commentData;
+        let page = createHtmlDocument(text);
+        let comments = page.querySelectorAll('.fdb_lst_ul > li[id^="comment_"]');
+        commentData.count = comments.length;
+        for (let item of comments) {
+            let commentNum = parse((item.id ?? '').r('comment_', ''));
+            if (!commentNum) continue;
+            let member = getFmMemberInfo(item.querySelector('.meta a.member_plate'));
+            commentData.comments[commentNum] = {
+                num: commentNum,
+                id: member.id,
+                ip: '',
+                name: member.name,
+                img: member.img,
+                fix: false,
+                text: transformContentHtml(item.querySelector('.comment-content .xe_content')?.innerHTML ?? '', 'pc-' + num),
+                target: 0,
+            };
+        }
+        if (lastCount != commentData.count) onPostCommentCountChanged[num]?.(commentData.count, true);
+        postCommentDatas[num] = commentData;
+        return commentData;
+    }
     let { esno } = await getPostContent(num).catch(debug);
     let lastCount = postCommentCount[num];
     let commentData = {
@@ -4037,6 +4302,7 @@ let genUpdateList = () => {
     let _str_survey, _str_notice;
     let _parse;
     let _lastNum;
+    let _siteMode;
     try {
         _debug = _DEBUG;
         _url = _URL;
@@ -4057,6 +4323,7 @@ let genUpdateList = () => {
         _str_notice = _SN;
         _parse = Number.parseInt;
         _lastNum = () => _LN;
+        _siteMode = _SM;
     } catch {
         _debug = debug;
         _url = getListUrl();
@@ -4074,6 +4341,7 @@ let genUpdateList = () => {
         _str_notice = str_notice;
         _parse = parse;
         _lastNum = () => lastNum;
+        _siteMode = siteMode;
     }
     let unescapeHtml = (safe) => {
         return safe
@@ -4091,6 +4359,77 @@ let genUpdateList = () => {
         try {
             text = text.replace(/(\n|\r|\t)/g, ''); // use replace instead of r due to worker compatibility
             let postDatas = [];
+            if (_siteMode == siteFm) {
+                let page = createHtmlDocument(text);
+                let updateCount = (postData, count) => {
+                    let lastCount = _postCommentCount[postData.num] ?? 0;
+                    if (count) postData.count = count;
+                    if (postData.num <= _lastNum()) {
+                        if (count != lastCount) _onChange(postData.num, count);
+                        return false;
+                    }
+                    return true;
+                };
+                let rows = [...page.querySelectorAll('.bd_lst.bd_tb_lst tbody tr')].filter(row => !row.classList.contains('notice'));
+                let getReplyCount = (target) => {
+                    let match = getNodeText(target).match(/[0-9]+/);
+                    if (!match) return 0;
+                    return _parse(match[0]) || 0;
+                };
+                for (let row of rows) {
+                    let titleLink = row.querySelector('td.title a[href]:not(.replyNum)');
+                    if (!titleLink) continue;
+                    let num = getFmDocumentNum(titleLink.getAttribute('href'));
+                    if (!num) continue;
+                    let postData = {
+                        num: num,
+                        subject: getNodeText(row.querySelector('td.cate a, td.cate span')),
+                        title: getNodeText(titleLink),
+                        nickname: '',
+                        id: '',
+                        ip: '',
+                        date: 0,
+                        img: '',
+                        fix: false,
+                        count: 0,
+                    };
+                    let count = getReplyCount(row.querySelector('a.replyNum, .comment_count'));
+                    if (!updateCount(postData, count)) continue;
+                    let member = getFmMemberInfo(row.querySelector('td.author a.member_plate'));
+                    postData.nickname = member.name;
+                    postData.id = member.id;
+                    postData.img = member.img;
+                    postData.fix = member.fix;
+                    if (postData.subject == _str_notice) continue;
+                    postDatas.push(postData);
+                }
+                if (!postDatas.length && !rows.length) {
+                    for (let item of page.querySelectorAll('.fm_best_widget._bd_pc > ul > li.li')) {
+                        let titleLink = item.querySelector('h3.title a[href], a[href].hotdeal_var8');
+                        if (!titleLink) continue;
+                        let num = getFmDocumentNum(titleLink.getAttribute('href'));
+                        if (!num) continue;
+                        let postData = {
+                            num: num,
+                            subject: getNodeText(item.querySelector('.category a')),
+                            title: getNodeText(item.querySelector('.ellipsis-target')) || getNodeText(titleLink),
+                            nickname: getNodeText(item.querySelector('.author')).replace(/^\/\s*/, ''),
+                            id: '',
+                            ip: '',
+                            date: 0,
+                            img: '',
+                            fix: false,
+                            count: 0,
+                        };
+                        let count = getReplyCount(item.querySelector('.comment_count'));
+                        if (!updateCount(postData, count)) continue;
+                        if (postData.subject == _str_notice) continue;
+                        postDatas.push(postData);
+                    }
+                }
+                await _onPostData(postDatas);
+                return;
+            }
             let matches = text.matchAll(/<tr[^>]*class="[^"]*us-post[^"]*"[^>]*data-no="([^"]*)".+?<\/tr>/g);
             if (!matches) return;
             for (let match of matches) {
@@ -4186,6 +4525,7 @@ let initUpdate = (...reason) => {
             `let _URL='${getListUrl()}';`,
             `let _IV=${interval};`,
             `let _LN=${lastNum};`,
+            `let _SM='${siteMode}';`,
             `let _SS='${str_survey}';`,
             `let _SN='${str_notice}';`,
             `let{_IH,_OH,_IT,_AT,_A,_TF,_DEBUG}=(${genUtil.toString()})();`,
@@ -4252,6 +4592,16 @@ let blockKey = '';
 
 // 권한 없는 갤러리인 경우
 let onWritingBlocked = (bBlocked = true) => {
+    if (isFm()) {
+        bWriteUnavailable = true;
+        addClass(inputContainer, hidden);
+        addClass(loginInfoContainer, hidden);
+        addClass(replyInfoContainer, hidden);
+        addClass(upload, hidden);
+        addClass(dccon, hidden);
+        addClass(submit, hidden);
+        return;
+    }
     if (!bWriteUnavailable && bBlocked && bGreeted) newLine({ title: str_notifyChatDisabled });
     bWriteUnavailable = bBlocked;
     if (bBlocked) {
@@ -4272,6 +4622,7 @@ let onWritingBlocked = (bBlocked = true) => {
 }
 
 refreshWriteSession = async() => {
+    if (isFm()) return onWritingBlocked();
     let html = await getAsText(getWriteUrl()).catch(debug);
     if (!/id="write"/.test(html)) return onWritingBlocked();
     onWritingBlocked(false);
