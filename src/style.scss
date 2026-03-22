@@ -468,10 +468,11 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
 }
 
 .fm-tabs {
-    width: calc(100% - 16px);
-    padding: 6px 8px 2px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    width: 100%;
+    padding: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 104px;
     background: rgba(0, 0, 0, .08);
     border-bottom: $border;
     box-sizing: border-box;
@@ -479,22 +480,32 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
 
 .fm-tabs-wrap {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
-    min-width: max-content;
+    width: 100%;
+    min-width: 0;
 }
 
 .fm-tab {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px 10px;
+    flex-direction: row;
+    flex: 0 0 auto;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 6px;
+    max-width: 100%;
+    padding: 6px 10px;
     border-radius: 999px;
     background: $colorBackgroundDarker;
     color: $colorForegroundDark;
     font-size: 12px;
-    white-space: nowrap;
+    line-height: 1.35;
+    text-align: left;
     border: 1px solid transparent;
     transition: all .2s;
+    box-sizing: border-box;
 
     &:hover {
         background: $colorBackgroundLight;
@@ -506,6 +517,41 @@ input, textarea, .b, .r, .p, .sb, .modal, .tooltip {
         border-color: rgba(255, 196, 0, .4);
         color: #ffd46b;
     }
+}
+
+.fm-tabs .fm-tab {
+    width: auto;
+    min-height: 0;
+}
+
+.fm-tab-box {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    border: 1px solid rgba(255, 255, 255, .25);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, .16);
+    color: transparent;
+    font-size: 10px;
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+.fm-tab.chk .fm-tab-box {
+    border-color: rgba(255, 196, 0, .45);
+    background: rgba(255, 196, 0, .2);
+    color: #ffd46b;
+}
+
+.fm-tab-label {
+    min-width: 0;
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
 }
 
 .ex {

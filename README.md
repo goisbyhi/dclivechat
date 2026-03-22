@@ -4,7 +4,7 @@
 
 <img src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico" style="width:1em;height:1em"> [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)
 
-최신 버전: `2.4.0-20260322`
+최신 버전: `2.4.1-20260322`
 
 <br>
 
@@ -67,6 +67,10 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 <br>
 
 ## Changelog
+v2.4.1-20260322
+* 에펨코리아 탭 선택 UI에서 `전체` 체크 표시가 더 잘 보이도록 수정
+* 긴 탭 이름이 잘리지 않도록 여러 줄 배치로 개선
+
 v2.4.0-20260322
 * 에펨코리아 읽기 전용 지원 추가
 * 에펨코리아 게시판 탭 필터 추가

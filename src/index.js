@@ -2543,8 +2543,14 @@ renderFmTabFilter = () => {
     let renderEntry = (label, checked, onclickFunc) => {
         let entry = createElement('a', tabs, {
             [onclick]: onclickFunc,
-            [innerText]: label,
+            title: label,
         }, 'fm-tab', checked ? 'chk' : '');
+        createElement(spanString, entry, {
+            [innerText]: checked ? '✓' : '',
+        }, 'fm-tab-box');
+        createElement(spanString, entry, {
+            [innerText]: label,
+        }, 'fm-tab-label');
         return entry;
     };
     renderEntry('전체', getSelectedFmTabs().length == 0, () => applyOption(getFmTabOptionKey(), ''));
