@@ -4403,14 +4403,90 @@ let genUpdateList = () => {
             .replace(/&gt;/g, '>')
             .replace(/&quot;/g, '"');
     }
+    let stripHtmlText = (string = '') => {
+        return unescapeHtml(
+            string
+                .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+                .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+                .replace(/<[^>]+>/g, ' ')
+        ).replace(/\s+/g, ' ').trim();
+    };
+    let getAttrLoose = (string, attrName) => {
+        let match = string.match(new RegExp(`${attrName}=(["'])(.*?)\\1`, 'i'));
+        if (!match) return '';
+        return match[2];
+    };
+    let getFmDocumentNumLoose = (href = '') => {
+        let match = href.match(/(?:document_srl=|\/)([0-9]+)(?:$|[\/?#&])/);
+        if (!match) return 0;
+        return _parse(match[1]) || 0;
+    };
+    let resolveFmUrl = (url = '') => {
+        if (!url) return '';
+        if (/^https?:\/\//i.test(url)) return url;
+        if (/^\/\//.test(url)) return 'https:' + url;
+        try {
+            return new URL(url, 'https://www.fmkorea.com').href;
+        } catch {
+            return url;
+        }
+    };
+    let getFmRowSubject = (row) => {
+        let match = row.match(/<td[^>]*class=(["'])[^"'<>]*\bcate\b[^"'<>]*\1[^>]*>(.*?)<\/td>/i);
+        return stripHtmlText(match?.[2] ?? '');
+    };
+    let getFmRowTitle = (row) => {
+        let titleCell = row.match(/<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\1[^>]*>(.*?)<\/td>/i)?.[2] ?? '';
+        let matches = titleCell.matchAll(/<a[^>]+href=(["'])([^"']+)\1[^>]*>(.*?)<\/a>/gi);
+        for (let match of matches) {
+            if (/\breplyNum\b/.test(match[0])) continue;
+            return {
+                href: match[2],
+                title: stripHtmlText(match[3]),
+            };
+        }
+        return {
+            href: '',
+            title: '',
+        };
+    };
+    let getFmRowReplyCount = (row) => {
+        let match = row.match(/<a[^>]*class=(["'])[^"'<>]*\breplyNum\b[^"'<>]*\1[^>]*>(.*?)<\/a>/i)
+            ?? row.match(/<[^>]*class=(["'])[^"'<>]*\bcomment_count\b[^"'<>]*\1[^>]*>(.*?)<\/[^>]+>/i);
+        let count = stripHtmlText(match?.[2] ?? '').match(/[0-9]+/);
+        if (!count) return 0;
+        return _parse(count[0]) || 0;
+    };
+    let getFmRowMember = (row) => {
+        let info = {
+            id: '',
+            name: '',
+            img: '',
+            fix: false,
+        };
+        let authorCell = row.match(/<td[^>]*class=(["'])[^"'<>]*\bauthor\b[^"'<>]*\1[^>]*>(.*?)<\/td>/i)?.[2] ?? '';
+        let member = authorCell.match(/<a[^>]*class=(["'])(.*?)\1[^>]*>(.*?)<\/a>/i);
+        if (!member) return info;
+        let className = member[2] ?? '';
+        let body = member[3] ?? '';
+        let idMatch = className.match(/member_([0-9]+)/);
+        if (idMatch) info.id = idMatch[1];
+        info.name = stripHtmlText(body);
+        let image = body.match(/<img[^>]*src=(["'])(.*?)\1/i);
+        if (image) {
+            info.img = resolveFmUrl(image[2]);
+            info.fix = _testFix(info.img);
+        }
+        return info;
+    };
+    let isFmNoticeRow = (row) => /\bnotice\b/.test(getAttrLoose(row, 'class'));
     let updateList = async () => {
         let text = await _getAsText(_url);
         if (!text) return;
         try {
             text = text.replace(/(\n|\r|\t)/g, ''); // use replace instead of r due to worker compatibility
             let postDatas = [];
-            if (_siteMode == siteFm) {
-                let page = createHtmlDocument(text);
+            if (_siteMode == 'fmkorea') {
                 let updateCount = (postData, count) => {
                     let lastCount = _postCommentCount[postData.num] ?? 0;
                     if (count) postData.count = count;
@@ -4420,21 +4496,17 @@ let genUpdateList = () => {
                     }
                     return true;
                 };
-                let rows = [...page.querySelectorAll('.bd_lst.bd_tb_lst tbody tr')].filter(row => !row.classList.contains('notice'));
-                let getReplyCount = (target) => {
-                    let match = getNodeText(target).match(/[0-9]+/);
-                    if (!match) return 0;
-                    return _parse(match[0]) || 0;
-                };
+                let rows = text.match(/<tr\b[^>]*>.*?<\/tr>/gi) ?? [];
                 for (let row of rows) {
-                    let titleLink = row.querySelector('td.title a[href]:not(.replyNum)');
-                    if (!titleLink) continue;
-                    let num = getFmDocumentNum(titleLink.getAttribute('href'));
+                    if (/<th\b/i.test(row) || isFmNoticeRow(row)) continue;
+                    let titleInfo = getFmRowTitle(row);
+                    if (!titleInfo.href) continue;
+                    let num = getFmDocumentNumLoose(titleInfo.href);
                     if (!num) continue;
                     let postData = {
                         num: num,
-                        subject: getFmSubjectText(row),
-                        title: getNodeText(titleLink),
+                        subject: getFmRowSubject(row),
+                        title: titleInfo.title,
                         nickname: '',
                         id: '',
                         ip: '',
@@ -4443,39 +4515,15 @@ let genUpdateList = () => {
                         fix: false,
                         count: 0,
                     };
-                    let count = getReplyCount(row.querySelector('a.replyNum, .comment_count'));
+                    let count = getFmRowReplyCount(row);
                     if (!updateCount(postData, count)) continue;
-                    let member = getFmMemberInfo(row.querySelector('td.author a.member_plate'));
+                    let member = getFmRowMember(row);
                     postData.nickname = member.name;
                     postData.id = member.id;
                     postData.img = member.img;
                     postData.fix = member.fix;
                     if (postData.subject == _str_notice) continue;
                     postDatas.push(postData);
-                }
-                if (!postDatas.length && !rows.length) {
-                    for (let item of page.querySelectorAll('.fm_best_widget._bd_pc > ul > li.li')) {
-                        let titleLink = item.querySelector('h3.title a[href], a[href].hotdeal_var8');
-                        if (!titleLink) continue;
-                        let num = getFmDocumentNum(titleLink.getAttribute('href'));
-                        if (!num) continue;
-                        let postData = {
-                            num: num,
-                            subject: getFmSubjectText(item),
-                            title: getNodeText(item.querySelector('.ellipsis-target')) || getNodeText(titleLink),
-                            nickname: getNodeText(item.querySelector('.author')).replace(/^\/\s*/, ''),
-                            id: '',
-                            ip: '',
-                            date: 0,
-                            img: '',
-                            fix: false,
-                            count: 0,
-                        };
-                        let count = getReplyCount(item.querySelector('.comment_count'));
-                        if (!updateCount(postData, count)) continue;
-                        if (postData.subject == _str_notice) continue;
-                        postDatas.push(postData);
-                    }
                 }
                 await _onPostData(postDatas);
                 return;

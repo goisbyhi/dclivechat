@@ -4,7 +4,7 @@
 
 <img src="https://nstatic.dcinside.com/dc/w/images/logo_icon.ico" style="width:1em;height:1em"> [라이브챗 갤러리](http://gall.dcinside.com/mini/livechat)
 
-최신 버전: `2.4.4-20260323`
+최신 버전: `2.4.5-20260323`
 
 <br>
 
@@ -67,6 +67,10 @@ javascript:(()=>{fetch('https://<GitHub 아이디>.github.io/dclivechat/min.js')
 <br>
 
 ## Changelog
+v2.4.5-20260323
+* 에펨코리아 새 글 갱신 코드를 작업자 스레드에서도 돌 수 있게 정리
+* 에펨코리아 목록 읽기에서 브라우저 전용 파서 의존을 줄여 장시간 갱신 안정성 개선
+
 v2.4.4-20260323
 * 에펨코리아에서 저장된 설정을 불러온 뒤에도 원래 채팅 전용 가로 배치가 유지되도록 수정
 * 에펨코리아 전용 화면 덮어쓰기를 더 걷어내고 기존 dclivechat 레이아웃에 가깝게 정리
