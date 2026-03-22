@@ -12,6 +12,7 @@
 // @match        https://gall.dcinside.com/*
 // @match        https://m.dcinside.com/*
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @connect      goisbyhi.github.io
 // @run-at       document-idle
 // ==/UserScript==
@@ -24,12 +25,29 @@
 
     const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.js?v=2.4.6-20260323';
     const fail = () => alert('dclivechat 불러오기에 실패했습니다');
+    const inject = (code) => {
+        const root = document.head || document.documentElement || document.body;
+        if (!root) throw new Error('no injection root');
+        const script = document.createElement('script');
+        script.textContent = code;
+        root.appendChild(script);
+        script.remove();
+    };
     const run = (code) => {
         try {
-            (0, eval)(code);
+            if (typeof unsafeWindow === 'object' && unsafeWindow && typeof unsafeWindow.eval === 'function') {
+                unsafeWindow.eval(code);
+                return;
+            }
+            inject(code);
         } catch (error) {
-            console.error(error);
-            fail();
+            try {
+                (0, eval)(code);
+            } catch (innerError) {
+                console.error(error);
+                console.error(innerError);
+                fail();
+            }
         }
     };
 
