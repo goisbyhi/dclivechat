@@ -57,38 +57,83 @@ main > .chat .cml {
 }
 
 main > .chat .chl {
+    display: flex !important;
     align-self: stretch;
     padding: 0 5px;
     box-sizing: border-box;
 }
 
 main > .chat .chl > .tt {
+    display: flex !important;
     width: 100%;
     padding: 9px 10px;
     box-sizing: border-box;
 }
 
 main > .chat:not(.fm) .chl {
-    align-items: flex-start;
+    align-items: flex-start !important;
+    align-self: stretch !important;
+}
+
+main > .chat:not(.fm) > .li-c,
+main > .chat:not(.fm) > .ri-c,
+main > .chat:not(.fm) > .ci-c {
+    display: none !important;
+    visibility: collapse !important;
 }
 
 main > .chat:not(.fm) .chl > .tt {
-    justify-content: flex-start;
-    align-items: flex-start;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
     width: 100%;
     gap: 6px;
-    align-items: center;
-    justify-content: flex-start;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+    text-align: left !important;
+}
+
+main > .chat:not(.fm) .chl > .tt > span .name,
+main > .chat:not(.fm) .chl > .tt > span .ip,
+main > .chat:not(.fm) .chl > .tt > span .sg,
+main > .chat:not(.fm) .chl > .tt > span .cm {
+    flex: 0 0 auto;
+}
+
+main > .chat:not(.fm) .chl > .tt > span .tt {
+    display: block !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+main > .chat:not(.fm) .chl > .tt > span > img.nikcon {
+    flex: 0 0 auto;
 }
 
 main > .chat:not(.fm) .chl > .tt > span * {
-    text-align: left;
+    text-align: left !important;
+}
+
+main > .chat:not(.fm) > .vp > .page {
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+main > .chat:not(.fm) .chl > .tt > span .name,
+main > .chat:not(.fm) .chl > .tt > span .ip,
+main > .chat:not(.fm) .chl > .tt > span .sg,
+main > .chat:not(.fm) .chl > .tt > span .tt {
+    line-height: 1.5 !important;
 }
 
 main > .chat > .ci-c {
@@ -201,6 +246,12 @@ main.co > .chat.fm .chl > .tt > span .tt {
 
 main.co > .chat.fm .chl > .tt > span .sg {
     flex: 0 0 auto;
+}
+
+main.co > .chat.fm > .vp > .page,
+main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
+    max-width: none !important;
+    margin: 0 !important;
 }
 
 @media (max-width: 520px) {
@@ -326,7 +377,86 @@ main.co > .chat.fm .chl > .tt > span .sg {
 }
 `;
     let currentDocumentHtml = () => document.documentElement?.outerHTML ?? '';
-    let looksLikeFmBoardHtml = (html = '') => /<tr\b/i.test(html) && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html);
+    let parseHtml = (html = '') => {
+        try {
+            return new DOMParser().parseFromString(html, 'text/html');
+        } catch {
+            let page = document.implementation.createHTMLDocument('');
+            page.documentElement.innerHTML = html;
+            return page;
+        }
+    };
+    let getNodeText = (node) => (node?.textContent ?? '').replace(/\s+/g, ' ').trim();
+    let escapeHtml = (text = '') => text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    let escapeAttr = (text = '') => escapeHtml(text);
+    let looksLikeFmBoardHtml = (html = '') =>
+        (
+            /<tr\b/i.test(html)
+            && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html)
+        )
+        || /data-dclivechat-fm-normalized=/.test(html);
+    let convertMobileFmListHtml = (html = '', baseUrl = location.href) => {
+        if (!html || /data-dclivechat-fm-normalized=/.test(html)) return html;
+        if (/<tr\b/i.test(html) && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html)) {
+            return html;
+        }
+
+        let page = parseHtml(html);
+        let board = page.querySelector('ol.bd_lst, ol.bd_m_lst, .bd_lst.bd_m_lst');
+        if (!board) return html;
+
+        let items = Array.from(board.children).filter((node) => node?.tagName == 'LI');
+        if (!items.length) return html;
+
+        let rows = [];
+        for (let item of items) {
+            let titleLink = item.querySelector('h3 a[href*="document_srl"], a.hx[href*="document_srl"], a[href*="document_srl"]');
+            let href = titleLink?.getAttribute('href') ?? '';
+            let numMatch = href.match(/document_srl=([0-9]+)/);
+            let num = numMatch?.[1] ?? '';
+            if (!num) continue;
+
+            let title = getNodeText(item.querySelector('h3 a[href*="document_srl"]'))
+                || getNodeText(item.querySelector('a.hx .blind'))
+                || getNodeText(titleLink);
+            if (!title) continue;
+
+            let infoSpans = Array.from(item.querySelectorAll('.info > span'));
+            let subject = getNodeText(
+                infoSpans.find((span) => span.querySelector('.fa-bars'))?.querySelector('b')
+                ?? item.querySelector('.info .fa-bars + b')
+            );
+            let author = getNodeText(
+                infoSpans.find((span) => span.querySelector('.fa-user'))
+            ).replace(/^.*?fa-user/i, '').trim();
+            if (!author) {
+                author = getNodeText(item.querySelector('.info .fa-user')?.parentElement);
+            }
+            let replyCount = getNodeText(item.querySelector('.replyNum, .comment_count')).match(/[0-9]+/)?.[0] ?? '';
+            let rowClass = (item.className || '').trim() || 'clear';
+            let titleHref = href;
+            try {
+                titleHref = new URL(href, baseUrl).href;
+            } catch {}
+
+            rows.push(
+                `<tr class="${escapeAttr(rowClass)}" data-document-srl="${escapeAttr(num)}">`
+                + `<td class="cate"><a>${escapeHtml(subject)}</a></td>`
+                + `<td class="title"><a href="${escapeAttr(titleHref)}">${escapeHtml(title)}</a>${replyCount ? `<a class="replyNum">[${escapeHtml(replyCount)}]</a>` : ''}</td>`
+                + `<td class="author"><a class="member">${escapeHtml(author)}</a></td>`
+                + `</tr>`
+            );
+        }
+
+        if (!rows.length) return html;
+        return `${html}<table data-dclivechat-fm-normalized="1"><tbody>${rows.join('')}</tbody></table>`;
+    };
+    let normalizeFmBoardHtml = (html = '', baseUrl = location.href) => convertMobileFmListHtml(html, baseUrl);
     let createHtmlResponse = (html, status = 200) => new Response(html, {
         status,
         headers: {
@@ -358,13 +488,13 @@ main.co > .chat.fm .chl > .tt > span .sg {
             try {
                 let html = frame.contentDocument?.documentElement?.outerHTML ?? '';
                 if (!html) html = currentDocumentHtml();
-                finish(createHtmlResponse(html, 200));
+                finish(createHtmlResponse(normalizeFmBoardHtml(html, url), 200));
             } catch {
-                finish(createHtmlResponse(currentDocumentHtml(), 200));
+                finish(createHtmlResponse(normalizeFmBoardHtml(currentDocumentHtml(), url), 200));
             }
         };
         frame.onerror = () => {
-            finish(createHtmlResponse(currentDocumentHtml(), 502));
+            finish(createHtmlResponse(normalizeFmBoardHtml(currentDocumentHtml(), url), 502));
         };
 
         root.appendChild(frame);
@@ -415,15 +545,20 @@ main.co > .chat.fm .chl > .tt > span .sg {
             try {
                 let response = await nativeFetch(input, init);
                 let text = await response.clone().text().catch(() => '');
-                if (response.ok && text && !fmBlockedPattern.test(text) && /<tr\b/i.test(text)) return response;
+                if (response.ok && text && !fmBlockedPattern.test(text)) {
+                    let normalized = normalizeFmBoardHtml(text, resolvedUrl);
+                    if (looksLikeFmBoardHtml(normalized)) {
+                        return createHtmlResponse(normalized, response.status);
+                    }
+                }
             } catch {}
 
             if (/listStyle=list/i.test(resolvedUrl)) {
-                let html = currentDocumentHtml();
+                let html = normalizeFmBoardHtml(currentDocumentHtml(), location.href);
                 if (looksLikeFmBoardHtml(html)) {
                     return createHtmlResponse(html, 200);
                 }
-                return loadHtmlByFrame(location.href);
+                return loadHtmlByFrame(resolvedUrl);
             }
 
             return loadHtmlByFrame(resolvedUrl);
