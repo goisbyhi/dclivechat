@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         dclivechat Mobile Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.20-20260324-mobile1
+// @version      2.4.21-20260324-mobile1
 // @description  Load the mobile-safe dclivechat build on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
-// @updateURL    https://goisbyhi.github.io/dclivechat/dclivechat.mobile.user.js
-// @downloadURL  https://goisbyhi.github.io/dclivechat/dclivechat.mobile.user.js
+// @updateURL    https://raw.githubusercontent.com/goisbyhi/dclivechat/main/dclivechat.mobile.user.js
+// @downloadURL  https://raw.githubusercontent.com/goisbyhi/dclivechat/main/dclivechat.mobile.user.js
 // @match        https://www.fmkorea.com/*
 // @match        https://m.fmkorea.com/*
 // @match        https://gall.dcinside.com/*
@@ -14,13 +14,14 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      goisbyhi.github.io
+// @connect      raw.githubusercontent.com
 // @run-at       document-idle
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    const loaderVersion = '2.4.20-20260324-mobile1';
+    const loaderVersion = '2.4.21-20260324-mobile1';
     const page = typeof unsafeWindow === 'object' && unsafeWindow ? unsafeWindow : window;
     const currentLoaderVersion = page.__dclivechat_mobile_loader_version__ || '';
     if ((page.__dclivechat_loader_running__ || page.__dclivechat_mobile_loader_running__) && currentLoaderVersion === loaderVersion) return;
@@ -44,7 +45,7 @@
         }
     }
 
-    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.20-20260324-mobile1';
+    const sourceUrl = 'https://raw.githubusercontent.com/goisbyhi/dclivechat/main/min.mobile.js?v=2.4.21-20260324-mobile1';
     const fail = () => alert('dclivechat 모바일 로더를 불러오지 못했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;
