@@ -20,10 +20,13 @@
 (function() {
     'use strict';
 
+    const loaderVersion = '2.4.13-20260323-mobile1';
     const page = typeof unsafeWindow === 'object' && unsafeWindow ? unsafeWindow : window;
-    if (page.__dclivechat_loader_running__ || page.__dclivechat_mobile_loader_running__) return;
+    const currentLoaderVersion = page.__dclivechat_mobile_loader_version__ || '';
+    if ((page.__dclivechat_loader_running__ || page.__dclivechat_mobile_loader_running__) && currentLoaderVersion === loaderVersion) return;
     page.__dclivechat_loader_running__ = true;
     page.__dclivechat_mobile_loader_running__ = true;
+    page.__dclivechat_mobile_loader_version__ = loaderVersion;
 
     if (/^m\.fmkorea\./.test(location.host)) {
         location.replace(location.href.replace('//m.', '//www.'));
