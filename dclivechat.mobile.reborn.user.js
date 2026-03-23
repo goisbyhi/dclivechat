@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         dclivechat Mobile Reborn Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      3.0.1-20260324-mobile1
+// @version      3.0.2-20260324-mobile1
 // @description  Load the rebuilt mobile dclivechat on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
@@ -21,7 +21,7 @@
 (function() {
     'use strict';
 
-    const loaderVersion = '3.0.1-20260324-mobile1';
+    const loaderVersion = '3.0.2-20260324-mobile1';
     const page = typeof unsafeWindow === 'object' && unsafeWindow ? unsafeWindow : window;
     const currentLoaderVersion = page.__dclivechat_mobile_reborn_loader_version__ || '';
     if (page.__dclivechat_mobile_reborn_loader_running__ && currentLoaderVersion === loaderVersion) return;
@@ -44,7 +44,7 @@
         }
     }
 
-    const sourceUrl = 'https://raw.githubusercontent.com/goisbyhi/dclivechat/main/min.mobile.reborn.js?v=3.0.1-20260324-mobile1';
+    const sourceUrl = 'https://raw.githubusercontent.com/goisbyhi/dclivechat/main/min.mobile.reborn.js?v=3.0.2-20260324-mobile1';
     const fail = () => alert('새 모바일 dclivechat 불러오기에 실패했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;

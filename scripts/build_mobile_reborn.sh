@@ -2,7 +2,7 @@
 set -eu
 
 ROOT="/Users/minjun/Documents/질문/dclivechat"
-VERSION="3.0.1-20260324-mobile1"
+VERSION="3.0.2-20260324-mobile1"
 PRELUDE="$ROOT/src/mobile-reborn-prelude.js"
 CORE="$ROOT/min.js"
 OUT="$ROOT/min.mobile.reborn.js"

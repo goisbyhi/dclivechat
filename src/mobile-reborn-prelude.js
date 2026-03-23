@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '3.0.1-20260324-mobile1';
+    let mobileBuildVersion = '3.0.2-20260324-mobile1';
     let fmSnapshotHtml = '';
     let fmSnapshotUrl = '';
     let fmBlockedUntil = 0;
@@ -212,7 +212,7 @@ main.co > .chat.fm > .hd {
 }
 
 main.co > .chat.fm > .hd .h {
-    font-size: 15px;
+    font-size: 16px;
     letter-spacing: .03em;
 }
 
@@ -230,9 +230,9 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
 }
 
 main.co > .chat.fm > .fm-tabs .fm-tab {
-    min-height: 38px;
-    padding: 8px 13px;
-    font-size: 14px;
+    min-height: 34px;
+    padding: 6px 11px;
+    font-size: 12px;
 }
 
 main.co > .chat.fm > .fm-tabs .fm-tab-box {
@@ -293,14 +293,14 @@ main.co > .chat.fm .chl > .tt > span .name {
 
 main.co > .chat.fm .chl > .tt > span .name,
 main.co > .chat.fm .chl > .tt > span .tt {
-    font-size: 16px !important;
-    line-height: 1.6 !important;
+    font-size: 18px !important;
+    line-height: 1.68 !important;
 }
 
 main.co > .chat.fm .chl > .tt > span .ip,
 main.co > .chat.fm .chl > .tt > span .sg,
 main.co > .chat.fm .chl > .tt > span .cm {
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 1.45 !important;
 }
 
@@ -349,12 +349,12 @@ main.co > .chat.fm .cml .text {
 main.co > .chat.fm .cml .writer-dlc,
 main.co > .chat.fm .cml .text,
 main.co > .chat.fm .cml .text * {
-    font-size: 14px !important;
-    line-height: 1.5 !important;
+    font-size: 16px !important;
+    line-height: 1.58 !important;
 }
 
 main.co > .chat.fm .cml .writer-dlc .ip {
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 main.co > .chat.fm .chl > .tt > span .name,
@@ -378,7 +378,7 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .hd {
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .hd .h {
-    font-size: 16px !important;
+    font-size: 17px !important;
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs {
@@ -391,9 +391,9 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs .fm-tabs-
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs .fm-tab {
-    min-height: 38px !important;
-    padding: 8px 13px !important;
-    font-size: 15px !important;
+    min-height: 34px !important;
+    padding: 6px 11px !important;
+    font-size: 14px !important;
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl,
@@ -412,14 +412,14 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt {
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .name,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .tt {
-    font-size: 17px !important;
-    line-height: 1.65 !important;
+    font-size: 19px !important;
+    line-height: 1.72 !important;
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .ip,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .sg,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .cm {
-    font-size: 13px !important;
+    font-size: 14px !important;
     line-height: 1.45 !important;
 }
 
@@ -430,7 +430,7 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
     }
 
     main.co > .chat.fm > .hd .h {
-        font-size: 15px !important;
+        font-size: 16px !important;
     }
 
     main.co > .chat.fm > .fm-tabs {
@@ -443,14 +443,14 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
-        min-height: 38px;
-        padding: 8px 13px;
-        font-size: 14px !important;
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 13px !important;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab-box {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
     }
 
     main > .chat > .vp > .page {
@@ -500,13 +500,13 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
 
     main.co > .chat.fm .chl > .tt > span .name,
     main.co > .chat.fm .chl > .tt > span .tt {
-        font-size: 16px !important;
+        font-size: 18px !important;
     }
 
     main.co > .chat.fm .chl > .tt > span .ip,
     main.co > .chat.fm .chl > .tt > span .sg,
     main.co > .chat.fm .chl > .tt > span .cm {
-        font-size: 12px !important;
+        font-size: 13px !important;
     }
 }
 
@@ -516,7 +516,7 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
     }
 
     main.co > .chat.fm > .hd .h {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     main.co > .chat.fm > .fm-tabs {
@@ -535,9 +535,9 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
-        min-height: 38px;
-        padding: 8px 13px;
-        font-size: 14px;
+        min-height: 34px;
+        padding: 6px 12px;
+        font-size: 13px;
     }
 
     main.co > .chat.fm .chl,
@@ -556,7 +556,13 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
 
     main.co > .chat.fm .chl > .tt > span .name,
     main.co > .chat.fm .chl > .tt > span .tt {
-        font-size: 16px;
+        font-size: 18px;
+    }
+
+    main.co > .chat.fm .chl > .tt > span .ip,
+    main.co > .chat.fm .chl > .tt > span .sg,
+    main.co > .chat.fm .chl > .tt > span .cm {
+        font-size: 13px;
     }
 }
 
@@ -741,6 +747,12 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
     let createFmBlockedResponse = (html = '', status = 430, retryAfter = 0) => {
         let waitSeconds = holdFmRequests(retryAfter);
         return createBlockedResponse(html, status, waitSeconds);
+    };
+    let getFmSnapshotResponse = () => {
+        if (!fmSnapshotHtml) return null;
+        let normalized = rememberFmBoardHtml(fmSnapshotHtml, fmSnapshotUrl || location.href);
+        if (!looksLikeFmBoardHtml(normalized)) return null;
+        return createHtmlResponse(normalized, 200);
     };
     let loadHtmlByFrame = (url) => new Promise((resolve) => {
         let root = document.body || document.documentElement || document.head;
@@ -1053,7 +1065,9 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
                 }
                 if (nativeResponse) {
                     if (nativeBlocked) {
-                        return createFmBlockedResponse(nativeText || (sameSnapshotUrl ? fmSnapshotHtml : ''), nativeResponse.status || 430, nativeRetryAfter);
+                        let snapshotResponse = getFmSnapshotResponse();
+                        if (snapshotResponse) return snapshotResponse;
+                        return createFmBlockedResponse(nativeText || fmSnapshotHtml || (sameSnapshotUrl ? fmSnapshotHtml : ''), nativeResponse.status || 430, nativeRetryAfter);
                     }
                     if (!nativeResponse.ok) {
                         return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
@@ -1061,9 +1075,13 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
                     if (nativeText) return createHtmlResponse(nativeText, 502);
                 }
                 if (frameBlocked || frameResponse.status == 429 || frameResponse.status == 430) {
-                    return createFmBlockedResponse(frameText || nativeText || (sameSnapshotUrl ? fmSnapshotHtml : ''), frameResponse.status || 430, getRetryAfterSeconds(frameResponse));
+                    let snapshotResponse = getFmSnapshotResponse();
+                    if (snapshotResponse) return snapshotResponse;
+                    return createFmBlockedResponse(frameText || nativeText || fmSnapshotHtml || (sameSnapshotUrl ? fmSnapshotHtml : ''), frameResponse.status || 430, getRetryAfterSeconds(frameResponse));
                 }
                 if (!frameResponse.ok) return frameResponse;
+                let snapshotResponse = getFmSnapshotResponse();
+                if (snapshotResponse) return snapshotResponse;
                 return createHtmlResponse(frameText, 502);
             }
 
