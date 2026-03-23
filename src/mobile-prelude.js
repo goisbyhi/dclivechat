@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.13-20260323-mobile1';
+    let mobileBuildVersion = '2.4.14-20260323-mobile1';
     let fmSnapshotHtml = '';
     let fmSnapshotUrl = '';
     let fmBlockedUntil = 0;
@@ -350,31 +350,27 @@ main > .chat.fm > .cb-c {
 
 @media (max-width: 520px) {
     main.co > .chat.fm > .hd {
-        height: 46px;
-        padding: 0 10px;
+        height: 48px;
+        padding: 0 12px;
     }
 
     main.co > .chat.fm > .hd .h {
-        font-size: 12px;
+        font-size: 14px !important;
     }
 
     main.co > .chat.fm > .fm-tabs {
-        padding: 8px 8px 6px;
-        max-height: min(16svh, 112px);
+        padding: 10px 10px 8px;
+        max-height: min(18svh, 148px);
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
-        gap: 6px;
+        gap: 8px;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
-        min-height: 30px;
-        padding: 5px 10px;
-        font-size: 12px;
-    }
-
-    main.co > .chat.fm .chl > .tt {
-        padding: 6px 9px;
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 13px !important;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab-box {
@@ -411,6 +407,31 @@ main > .chat.fm > .cb-c {
 
     main > .chat .chl > .tt > span .sg {
         font-size: 10px;
+    }
+
+    main.co > .chat.fm .chl,
+    main.co > .chat.fm .chl > .tt,
+    main.co > .chat.fm .cml {
+        width: calc(100% - 8px);
+    }
+
+    main.co > .chat.fm .chl {
+        padding: 0 4px;
+    }
+
+    main.co > .chat.fm .chl > .tt {
+        padding: 8px 9px;
+    }
+
+    main.co > .chat.fm .chl > .tt > span .name,
+    main.co > .chat.fm .chl > .tt > span .tt {
+        font-size: 14px !important;
+    }
+
+    main.co > .chat.fm .chl > .tt > span .ip,
+    main.co > .chat.fm .chl > .tt > span .sg,
+    main.co > .chat.fm .chl > .tt > span .cm {
+        font-size: 10px !important;
     }
 }
 
