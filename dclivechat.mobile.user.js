@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         dclivechat Mobile Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.19-20260323-mobile1
+// @version      2.4.20-20260324-mobile1
 // @description  Load the mobile-safe dclivechat build on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
@@ -20,7 +20,7 @@
 (function() {
     'use strict';
 
-    const loaderVersion = '2.4.19-20260323-mobile1';
+    const loaderVersion = '2.4.20-20260324-mobile1';
     const page = typeof unsafeWindow === 'object' && unsafeWindow ? unsafeWindow : window;
     const currentLoaderVersion = page.__dclivechat_mobile_loader_version__ || '';
     if ((page.__dclivechat_loader_running__ || page.__dclivechat_mobile_loader_running__) && currentLoaderVersion === loaderVersion) return;
@@ -44,7 +44,7 @@
         }
     }
 
-    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.17-20260323-mobile1';
+    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.20-20260324-mobile1';
     const fail = () => alert('dclivechat 모바일 로더를 불러오지 못했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;
@@ -121,29 +121,35 @@
             style.textContent = [
                 "html { text-size-adjust: 175% !important; -webkit-text-size-adjust: 175% !important; }",
                 "body { zoom: 1.28 !important; }",
+                "main.co > .chat.fm > .hd .h {",
+                "  font-size: 18px !important;",
+                "}",
+                "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm > .hd .h {",
+                "  font-size: 19px !important;",
+                "}",
                 "main.co > .chat.fm .chl > .tt > span .name,",
                 "main.co > .chat.fm .chl > .tt > span .tt {",
-                "  font-size: 17px !important;",
-                "  line-height: 1.65 !important;",
+                "  font-size: 19px !important;",
+                "  line-height: 1.72 !important;",
                 "}",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .name,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .tt {",
-                "  font-size: 18px !important;",
-                "  line-height: 1.68 !important;",
+                "  font-size: 20px !important;",
+                "  line-height: 1.76 !important;",
                 "}",
                 "main.co > .chat.fm .chl > .tt > span .ip,",
                 "main.co > .chat.fm .chl > .tt > span .sg,",
                 "main.co > .chat.fm .chl > .tt > span .cm {",
-                "  font-size: 12px !important;",
-                "  line-height: 1.45 !important;",
+                "  font-size: 14px !important;",
+                "  line-height: 1.52 !important;",
                 "}",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .ip,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .sg,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .cm {",
-                "  font-size: 13px !important;",
+                "  font-size: 15px !important;",
                 "}",
-                "main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 14px !important; }",
-                "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 15px !important; }"
+                "main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 16px !important; }",
+                "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 17px !important; }"
             ].join('\\n');
             (document.head || document.documentElement || document.body).appendChild(style);
         };
@@ -159,8 +165,8 @@
                 const style = window.getComputedStyle(element);
                 const size = parseFloat(style.fontSize || '0');
                 if (!Number.isNaN(size) && size > 0 && size < 16) {
-                    setImportant(element, 'font-size', '18px');
-                    setImportant(element, 'line-height', '1.48');
+                    setImportant(element, 'font-size', '19px');
+                    setImportant(element, 'line-height', '1.56');
                 }
             }
         };
@@ -173,9 +179,9 @@
             const ip = inline.querySelector('.ip');
             const sg = inline.querySelector('.sg');
             const cm = inline.querySelector('.cm');
-            const contentFont = compact ? '18px' : '17px';
-            const contentLineHeight = compact ? '1.68' : '1.65';
-            const metaFont = compact ? '13px' : '12px';
+            const contentFont = compact ? '20px' : '19px';
+            const contentLineHeight = compact ? '1.76' : '1.72';
+            const metaFont = compact ? '15px' : '14px';
 
             if (name) {
                 setImportant(name, 'font-size', contentFont);
@@ -188,7 +194,7 @@
             [ip, sg, cm].forEach((node) => {
                 if (!node) return;
                 setImportant(node, 'font-size', metaFont);
-                setImportant(node, 'line-height', '1.45');
+                setImportant(node, 'line-height', '1.52');
             });
         };
 
@@ -249,7 +255,7 @@
         const applyTabsPatch = () => {
             const compact = document.documentElement.dataset.dclivechatCompactDevice === '1';
             document.querySelectorAll('main.co > .chat.fm > .fm-tabs .fm-tab').forEach((tab) => {
-                setImportant(tab, 'font-size', compact ? '15px' : '14px');
+                setImportant(tab, 'font-size', compact ? '17px' : '16px');
             });
         };
 
