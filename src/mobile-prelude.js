@@ -3,6 +3,9 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
+    let mobileBuildVersion = '2.4.7-20260323-mobile1';
+    let fmSnapshotHtml = '';
+    let mobileLayoutObserverStarted = false;
     let mobileStyle = `
 body {
     -webkit-text-size-adjust: 100%;
@@ -77,13 +80,15 @@ main > .chat:not(.fm) .chl {
 
 main > .chat:not(.fm) > .li-c,
 main > .chat:not(.fm) > .ri-c,
-main > .chat:not(.fm) > .ci-c {
+main > .chat:not(.fm) > .ci-c,
+main > .chat:not(.fm) > .cb-c {
     display: none !important;
     visibility: collapse !important;
 }
 
 main > .chat:not(.fm) .chl > .tt {
     display: flex !important;
+    flex-direction: row !important;
     justify-content: flex-start !important;
     align-items: flex-start !important;
     text-align: left !important;
@@ -92,13 +97,14 @@ main > .chat:not(.fm) .chl > .tt {
 main > .chat:not(.fm) .chl > .tt > span {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important;
     width: 100%;
     gap: 6px;
     align-items: baseline !important;
     justify-content: flex-start !important;
     align-content: flex-start !important;
     text-align: left !important;
+    align-self: stretch !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span .name,
@@ -106,22 +112,39 @@ main > .chat:not(.fm) .chl > .tt > span .ip,
 main > .chat:not(.fm) .chl > .tt > span .sg,
 main > .chat:not(.fm) .chl > .tt > span .cm {
     flex: 0 0 auto;
+    align-self: baseline !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span .tt {
-    display: block !important;
-    flex: 1 1 auto;
+    display: inline !important;
+    flex: 1 1 0;
     min-width: 0;
     white-space: normal;
     overflow-wrap: anywhere;
+    align-self: baseline !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span > img.nikcon {
     flex: 0 0 auto;
+    align-self: baseline !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span * {
     text-align: left !important;
+}
+
+main > .chat:not(.fm) .cml,
+main > .chat:not(.fm) .cml > .vp,
+main > .chat:not(.fm) .cml > .vp > .page,
+main > .chat:not(.fm) .cml > .vp > .page > .text {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+
+main > .chat:not(.fm) .cml .text {
+    width: 100% !important;
 }
 
 main > .chat:not(.fm) > .vp > .page {
@@ -400,6 +423,47 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html)
         )
         || /data-dclivechat-fm-normalized=/.test(html);
+    let convertDesktopFmListHtml = (html = '', baseUrl = location.href) => {
+        if (!html || /data-dclivechat-fm-normalized=/.test(html)) return html;
+
+        let page = parseHtml(html);
+        let rows = [];
+        for (let item of page.querySelectorAll('tr.us-post[data-no], tr.notice[data-no], tr[class*="us-post"][data-no]')) {
+            let num = (item.getAttribute('data-no') || '').trim();
+            if (!num) continue;
+
+            let subject = getNodeText(item.querySelector('td.gall_subject a, td.gall_subject, td.gall_num'));
+            if (subject == '공지' || subject == 'AD') continue;
+
+            let titleLink = item.querySelector('td.gall_tit a[href], td.title a[href], td.gall_tit > a[href]');
+            let title = getNodeText(titleLink ?? item.querySelector('td.gall_tit, td.title'));
+            if (!title) continue;
+
+            let titleHref = titleLink?.getAttribute('href') ?? '';
+            try {
+                titleHref = new URL(titleHref, baseUrl).href;
+            } catch {}
+
+            let replyCount = getNodeText(item.querySelector('.reply_num, .replyNum, .comment_count')).match(/[0-9]+/)?.[0] ?? '';
+            let writer = item.querySelector('td.gall_writer, td.author');
+            let authorLink = writer?.querySelector('a');
+            let authorClass = (authorLink?.className || '').trim();
+            let author = getNodeText(authorLink ?? writer);
+            let authorImg = authorLink?.querySelector('img')?.getAttribute('src') ?? '';
+            let authorImgHtml = authorImg ? `<img src="${escapeAttr(authorImg)}">` : '';
+
+            rows.push(
+                `<tr class="us-post dclivechat-fm-row" data-dclivechat-fm-normalized="1" data-no="${escapeAttr(num)}">`
+                + `<td class="cate"><a>${escapeHtml(subject)}</a></td>`
+                + `<td class="title"><a href="${escapeAttr(titleHref)}">${escapeHtml(title)}</a>${replyCount ? `<a class="replyNum">[${escapeHtml(replyCount)}]</a>` : ''}</td>`
+                + `<td class="author"><a class="${escapeAttr(authorClass || 'member')}" data-no="${escapeAttr(num)}">${authorImgHtml}${escapeHtml(author)}</a></td>`
+                + `</tr>`
+            );
+        }
+
+        if (!rows.length) return html;
+        return `${html}<table data-dclivechat-fm-normalized="1"><tbody>${rows.join('')}</tbody></table>`;
+    };
     let convertMobileFmListHtml = (html = '', baseUrl = location.href) => {
         if (!html || /data-dclivechat-fm-normalized=/.test(html)) return html;
         if (/<tr\b/i.test(html) && /(class=(["'])[^"'<>]*\btitle\b[^"'<>]*\2|<td[^>]*class=(["'])[^"'<>]*\btitle\b[^"'<>]*\3)/i.test(html)) {
@@ -456,7 +520,15 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         if (!rows.length) return html;
         return `${html}<table data-dclivechat-fm-normalized="1"><tbody>${rows.join('')}</tbody></table>`;
     };
-    let normalizeFmBoardHtml = (html = '', baseUrl = location.href) => convertMobileFmListHtml(html, baseUrl);
+    let normalizeFmBoardHtml = (html = '', baseUrl = location.href) => {
+        let normalized = convertDesktopFmListHtml(html, baseUrl);
+        return convertMobileFmListHtml(normalized, baseUrl);
+    };
+    let rememberFmBoardHtml = (html = '', baseUrl = location.href) => {
+        let normalized = normalizeFmBoardHtml(html, baseUrl);
+        if (looksLikeFmBoardHtml(normalized)) fmSnapshotHtml = normalized;
+        return normalized;
+    };
     let createHtmlResponse = (html, status = 200) => new Response(html, {
         status,
         headers: {
@@ -481,20 +553,20 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             resolve(response);
         };
         let timer = setTimeout(() => {
-            finish(createHtmlResponse(currentDocumentHtml(), 200));
+            finish(createHtmlResponse(fmSnapshotHtml || currentDocumentHtml(), 200));
         }, 15000);
 
         frame.onload = () => {
             try {
                 let html = frame.contentDocument?.documentElement?.outerHTML ?? '';
-                if (!html) html = currentDocumentHtml();
-                finish(createHtmlResponse(normalizeFmBoardHtml(html, url), 200));
+                if (!html) html = fmSnapshotHtml || currentDocumentHtml();
+                finish(createHtmlResponse(rememberFmBoardHtml(html, url), 200));
             } catch {
-                finish(createHtmlResponse(normalizeFmBoardHtml(currentDocumentHtml(), url), 200));
+                finish(createHtmlResponse(fmSnapshotHtml || rememberFmBoardHtml(currentDocumentHtml(), url), 200));
             }
         };
         frame.onerror = () => {
-            finish(createHtmlResponse(normalizeFmBoardHtml(currentDocumentHtml(), url), 502));
+            finish(createHtmlResponse(fmSnapshotHtml || rememberFmBoardHtml(currentDocumentHtml(), url), 502));
         };
 
         root.appendChild(frame);
@@ -519,30 +591,35 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         if (!title || !inline) return;
 
         setImportantStyle(line, 'display', 'flex');
+        setImportantStyle(line, 'flex-direction', 'row');
+        setImportantStyle(line, 'justify-content', 'flex-start');
         setImportantStyle(line, 'align-items', 'flex-start');
         setImportantStyle(line, 'align-self', 'stretch');
         setImportantStyle(title, 'display', 'flex');
+        setImportantStyle(title, 'flex-direction', 'row');
         setImportantStyle(title, 'justify-content', 'flex-start');
         setImportantStyle(title, 'align-items', 'flex-start');
         setImportantStyle(title, 'text-align', 'left');
         setImportantStyle(inline, 'display', 'flex');
         setImportantStyle(inline, 'flex-direction', 'row');
-        setImportantStyle(inline, 'flex-wrap', 'wrap');
+        setImportantStyle(inline, 'flex-wrap', 'nowrap');
         setImportantStyle(inline, 'justify-content', 'flex-start');
         setImportantStyle(inline, 'align-items', 'baseline');
         setImportantStyle(inline, 'align-content', 'flex-start');
         setImportantStyle(inline, 'text-align', 'left');
+        setImportantStyle(inline, 'align-self', 'stretch');
 
         for (let item of inline.children) {
             if (item.classList.contains('tt')) {
-                setImportantStyle(item, 'display', 'block');
-                setImportantStyle(item, 'flex', '1 1 auto');
+                setImportantStyle(item, 'display', 'inline');
+                setImportantStyle(item, 'flex', '1 1 0');
                 setImportantStyle(item, 'min-width', '0');
                 setImportantStyle(item, 'white-space', 'normal');
                 setImportantStyle(item, 'overflow-wrap', 'anywhere');
             } else {
                 setImportantStyle(item, 'flex', '0 0 auto');
             }
+            setImportantStyle(item, 'align-self', 'baseline');
             setImportantStyle(item, 'text-align', 'left');
         }
     };
@@ -554,13 +631,13 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         let chat = main.querySelector(':scope > .chat:not(.fm)');
         if (!chat) return;
 
-        document.documentElement.dataset.dclivechatMobileBuild = '2.4.6-20260323-mobile7';
+        document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
         main.classList.add('co');
         if (video) {
             setImportantStyle(video, 'display', 'none');
             setImportantStyle(video, 'visibility', 'collapse');
         }
-        for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c']) {
+        for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c', ':scope > .cb-c']) {
             let node = chat.querySelector(selector);
             if (!node) continue;
             setImportantStyle(node, 'display', 'none');
@@ -585,8 +662,12 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         };
     })();
     let observeMobileLayout = () => {
-        if (isFm) return;
-        queueDcMobileLayout();
+        if (mobileLayoutObserverStarted) {
+            if (!isFm) queueDcMobileLayout();
+            return;
+        }
+        mobileLayoutObserverStarted = true;
+        if (!isFm) queueDcMobileLayout();
         let observer = new MutationObserver(() => queueDcMobileLayout());
         observer.observe(document.documentElement, {
             childList: true,
@@ -613,6 +694,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     }
 
     if (isFm && typeof window.fetch === 'function') {
+        fmSnapshotHtml = rememberFmBoardHtml(currentDocumentHtml(), location.href);
         let nativeFetch = window.fetch.bind(window);
         window.fetch = async (input, init = {}) => {
             let requestUrl = typeof input === 'string' ? input : (input?.url ?? '');
@@ -630,7 +712,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
                 let response = await nativeFetch(input, init);
                 let text = await response.clone().text().catch(() => '');
                 if (response.ok && text && !fmBlockedPattern.test(text)) {
-                    let normalized = normalizeFmBoardHtml(text, resolvedUrl);
+                    let normalized = rememberFmBoardHtml(text, resolvedUrl);
                     if (looksLikeFmBoardHtml(normalized)) {
                         return createHtmlResponse(normalized, response.status);
                     }
@@ -638,24 +720,26 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             } catch {}
 
             if (/listStyle=list/i.test(resolvedUrl)) {
-                let html = normalizeFmBoardHtml(currentDocumentHtml(), location.href);
+                let html = rememberFmBoardHtml(currentDocumentHtml(), location.href);
                 if (looksLikeFmBoardHtml(html)) {
                     return createHtmlResponse(html, 200);
                 }
+                if (fmSnapshotHtml) return createHtmlResponse(fmSnapshotHtml, 200);
                 return loadHtmlByFrame(resolvedUrl);
             }
 
+            if (fmSnapshotHtml) return createHtmlResponse(fmSnapshotHtml, 200);
             return loadHtmlByFrame(resolvedUrl);
         };
     }
 
+    let startMobilePrelude = () => {
+        injectStyle();
+        observeMobileLayout();
+    };
+
+    startMobilePrelude();
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(injectStyle, 0);
-            setTimeout(observeMobileLayout, 0);
-        }, { once: true });
-    } else {
-        setTimeout(injectStyle, 0);
-        setTimeout(observeMobileLayout, 0);
+        document.addEventListener('DOMContentLoaded', startMobilePrelude, { once: true });
     }
 })();

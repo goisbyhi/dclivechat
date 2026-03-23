@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         dclivechat Mobile Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.6-20260323-mobile7
+// @version      2.4.7-20260323-mobile1
 // @description  Load the mobile-safe dclivechat build on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
@@ -41,7 +41,7 @@
         }
     }
 
-    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.6-20260323-mobile7';
+    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.mobile.js?v=2.4.7-20260323-mobile1';
     const fail = () => alert('dclivechat 모바일 로더를 불러오지 못했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;
