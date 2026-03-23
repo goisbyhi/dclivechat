@@ -291,19 +291,6 @@ main.co > .chat.fm .chl > .tt > span .name {
     font-weight: 700;
 }
 
-main.co > .chat.fm .chl > .tt > span .name,
-main.co > .chat.fm .chl > .tt > span .tt {
-    font-size: 18px !important;
-    line-height: 1.68 !important;
-}
-
-main.co > .chat.fm .chl > .tt > span .ip,
-main.co > .chat.fm .chl > .tt > span .sg,
-main.co > .chat.fm .chl > .tt > span .cm {
-    font-size: 13px !important;
-    line-height: 1.5 !important;
-}
-
 main.co > .chat.fm .chl > .tt > span .tt {
     display: block !important;
     flex: 1 1 0;
@@ -347,13 +334,9 @@ main.co > .chat.fm .cml .text {
 }
 
 main.co > .chat.fm .chl > .tt > span .name,
-main.co > .chat.fm .chl > .tt > span .tt {
-    line-height: 1.68 !important;
-}
-
 main.co > .chat.fm .chl > .tt > span .ip,
 main.co > .chat.fm .chl > .tt > span .sg,
-main.co > .chat.fm .chl > .tt > span .cm {
+main.co > .chat.fm .chl > .tt > span .tt {
     line-height: 1.5 !important;
 }
 
@@ -405,15 +388,15 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt {
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .name,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .tt {
-    font-size: 19px !important;
-    line-height: 1.72 !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .ip,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .sg,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .cm {
-    font-size: 14px !important;
-    line-height: 1.55 !important;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
 }
 
 @media (max-width: 520px) {
@@ -493,13 +476,13 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
 
     main.co > .chat.fm .chl > .tt > span .name,
     main.co > .chat.fm .chl > .tt > span .tt {
-        font-size: 18px !important;
+        font-size: 14px !important;
     }
 
     main.co > .chat.fm .chl > .tt > span .ip,
     main.co > .chat.fm .chl > .tt > span .sg,
     main.co > .chat.fm .chl > .tt > span .cm {
-        font-size: 12px !important;
+        font-size: 10px !important;
     }
 }
 
@@ -549,14 +532,7 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
 
     main.co > .chat.fm .chl > .tt > span .name,
     main.co > .chat.fm .chl > .tt > span .tt {
-        font-size: 18px;
-        line-height: 1.7;
-    }
-
-    main.co > .chat.fm .chl > .tt > span .ip,
-    main.co > .chat.fm .chl > .tt > span .sg,
-    main.co > .chat.fm .chl > .tt > span .cm {
-        font-size: 13px;
+        font-size: 15px;
     }
 }
 

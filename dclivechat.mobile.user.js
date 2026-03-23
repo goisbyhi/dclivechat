@@ -130,24 +130,24 @@
                 "}",
                 "main.co > .chat.fm .chl > .tt > span .name,",
                 "main.co > .chat.fm .chl > .tt > span .tt {",
-                "  font-size: 19px !important;",
-                "  line-height: 1.72 !important;",
+                "  font-size: 17px !important;",
+                "  line-height: 1.65 !important;",
                 "}",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .name,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .tt {",
-                "  font-size: 20px !important;",
-                "  line-height: 1.76 !important;",
+                "  font-size: 18px !important;",
+                "  line-height: 1.68 !important;",
                 "}",
                 "main.co > .chat.fm .chl > .tt > span .ip,",
                 "main.co > .chat.fm .chl > .tt > span .sg,",
                 "main.co > .chat.fm .chl > .tt > span .cm {",
-                "  font-size: 14px !important;",
-                "  line-height: 1.52 !important;",
+                "  font-size: 12px !important;",
+                "  line-height: 1.45 !important;",
                 "}",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .ip,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .sg,",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm .chl > .tt > span .cm {",
-                "  font-size: 15px !important;",
+                "  font-size: 13px !important;",
                 "}",
                 "main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 16px !important; }",
                 "html[data-dclivechat-compact-device=\\"1\\"] main.co > .chat.fm > .fm-tabs .fm-tab { font-size: 17px !important; }"
@@ -166,8 +166,8 @@
                 const style = window.getComputedStyle(element);
                 const size = parseFloat(style.fontSize || '0');
                 if (!Number.isNaN(size) && size > 0 && size < 16) {
-                    setImportant(element, 'font-size', '19px');
-                    setImportant(element, 'line-height', '1.56');
+                    setImportant(element, 'font-size', '18px');
+                    setImportant(element, 'line-height', '1.48');
                 }
             }
         };
@@ -180,9 +180,9 @@
             const ip = inline.querySelector('.ip');
             const sg = inline.querySelector('.sg');
             const cm = inline.querySelector('.cm');
-            const contentFont = compact ? '20px' : '19px';
-            const contentLineHeight = compact ? '1.76' : '1.72';
-            const metaFont = compact ? '15px' : '14px';
+            const contentFont = compact ? '18px' : '17px';
+            const contentLineHeight = compact ? '1.68' : '1.65';
+            const metaFont = compact ? '13px' : '12px';
 
             if (name) {
                 setImportant(name, 'font-size', contentFont);
@@ -195,7 +195,7 @@
             [ip, sg, cm].forEach((node) => {
                 if (!node) return;
                 setImportant(node, 'font-size', metaFont);
-                setImportant(node, 'line-height', '1.52');
+                setImportant(node, 'line-height', '1.45');
             });
         };
 
