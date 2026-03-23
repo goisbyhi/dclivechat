@@ -509,6 +509,90 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         style.textContent = mobileStyle;
         root.appendChild(style);
     };
+    let setImportantStyle = (node, name, value) => {
+        if (!node?.style) return;
+        node.style.setProperty(name, value, 'important');
+    };
+    let applyDcLineLayout = (line) => {
+        let title = line?.querySelector(':scope > .tt');
+        let inline = title?.querySelector(':scope > span');
+        if (!title || !inline) return;
+
+        setImportantStyle(line, 'display', 'flex');
+        setImportantStyle(line, 'align-items', 'flex-start');
+        setImportantStyle(line, 'align-self', 'stretch');
+        setImportantStyle(title, 'display', 'flex');
+        setImportantStyle(title, 'justify-content', 'flex-start');
+        setImportantStyle(title, 'align-items', 'flex-start');
+        setImportantStyle(title, 'text-align', 'left');
+        setImportantStyle(inline, 'display', 'flex');
+        setImportantStyle(inline, 'flex-direction', 'row');
+        setImportantStyle(inline, 'flex-wrap', 'wrap');
+        setImportantStyle(inline, 'justify-content', 'flex-start');
+        setImportantStyle(inline, 'align-items', 'baseline');
+        setImportantStyle(inline, 'align-content', 'flex-start');
+        setImportantStyle(inline, 'text-align', 'left');
+
+        for (let item of inline.children) {
+            if (item.classList.contains('tt')) {
+                setImportantStyle(item, 'display', 'block');
+                setImportantStyle(item, 'flex', '1 1 auto');
+                setImportantStyle(item, 'min-width', '0');
+                setImportantStyle(item, 'white-space', 'normal');
+                setImportantStyle(item, 'overflow-wrap', 'anywhere');
+            } else {
+                setImportantStyle(item, 'flex', '0 0 auto');
+            }
+            setImportantStyle(item, 'text-align', 'left');
+        }
+    };
+    let applyDcMobileLayout = () => {
+        if (isFm) return;
+        let main = document.body?.querySelector(':scope > main') ?? document.querySelector('body > main');
+        if (!main) return;
+        let video = main.querySelector(':scope > .video');
+        let chat = main.querySelector(':scope > .chat:not(.fm)');
+        if (!chat) return;
+
+        document.documentElement.dataset.dclivechatMobileBuild = '2.4.6-20260323-mobile7';
+        main.classList.add('co');
+        if (video) {
+            setImportantStyle(video, 'display', 'none');
+            setImportantStyle(video, 'visibility', 'collapse');
+        }
+        for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c']) {
+            let node = chat.querySelector(selector);
+            if (!node) continue;
+            setImportantStyle(node, 'display', 'none');
+            setImportantStyle(node, 'visibility', 'collapse');
+        }
+        let page = chat.querySelector(':scope > .vp > .page');
+        if (page) {
+            setImportantStyle(page, 'max-width', 'none');
+            setImportantStyle(page, 'margin', '0');
+        }
+        for (let line of chat.querySelectorAll('.chl')) applyDcLineLayout(line);
+    };
+    let queueDcMobileLayout = (() => {
+        let queued = false;
+        return () => {
+            if (queued || isFm) return;
+            queued = true;
+            requestAnimationFrame(() => {
+                queued = false;
+                applyDcMobileLayout();
+            });
+        };
+    })();
+    let observeMobileLayout = () => {
+        if (isFm) return;
+        queueDcMobileLayout();
+        let observer = new MutationObserver(() => queueDcMobileLayout());
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+        });
+    };
 
     if (!navigator.clipboard) {
         try {
@@ -566,8 +650,12 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(injectStyle, 0), { once: true });
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(injectStyle, 0);
+            setTimeout(observeMobileLayout, 0);
+        }, { once: true });
     } else {
         setTimeout(injectStyle, 0);
+        setTimeout(observeMobileLayout, 0);
     }
 })();
