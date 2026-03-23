@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.8-20260323-mobile1';
+    let mobileBuildVersion = '2.4.9-20260323-mobile1';
     let fmSnapshotHtml = '';
     let mobileLayoutObserverStarted = false;
     let mobileStyle = `
@@ -534,15 +534,30 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         if (looksLikeFmBoardHtml(normalized)) fmSnapshotHtml = normalized;
         return normalized;
     };
-    let createHtmlResponse = (html, status = 200) => new Response(html, {
-        status,
+    let sanitizeResponseStatus = (status = 200) => {
+        let numeric = Number.parseInt(status, 10) || 0;
+        if (numeric < 200 || numeric > 599) return 502;
+        return numeric;
+    };
+    let createHtmlResponse = (html, status = 200, extraHeaders = {}) => new Response(html, {
+        status: sanitizeResponseStatus(status),
         headers: {
             'content-type': 'text/html; charset=utf-8',
+            ...extraHeaders,
         },
     });
+    let createBlockedResponse = (html = '', status = 430, retryAfter = 0) => {
+        let headers = {};
+        if (retryAfter > 0) headers['retry-after'] = String(retryAfter);
+        return createHtmlResponse(html || '에펨코리아 보안 시스템', status, headers);
+    };
+    let getRetryAfterSeconds = (response) => Number.parseInt(response?.headers?.get('retry-after') ?? '0', 10) || 0;
+    let getRetryAfterHeaders = (seconds = 0) => seconds > 0 ? {
+        'retry-after': String(seconds),
+    } : {};
     let loadHtmlByFrame = (url) => new Promise((resolve) => {
         let root = document.body || document.documentElement || document.head;
-        if (!root) return resolve(createHtmlResponse(document.documentElement?.outerHTML ?? '', 200));
+        if (!root) return resolve(createHtmlResponse('', 502));
 
         let frame = document.createElement('iframe');
         frame.setAttribute('aria-hidden', 'true');
@@ -550,28 +565,55 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         frame.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;border:0;visibility:hidden;';
 
         let settled = false;
+        let lastHtml = '';
+        let lastBlockedHtml = '';
         let finish = (response) => {
             if (settled) return;
             settled = true;
             clearTimeout(timer);
+            clearInterval(probe);
             frame.remove();
             resolve(response);
         };
-        let timer = setTimeout(() => {
-            finish(createHtmlResponse(fmSnapshotHtml || currentDocumentHtml(), 200));
-        }, 15000);
-
-        frame.onload = () => {
+        let inspect = () => {
             try {
                 let html = frame.contentDocument?.documentElement?.outerHTML ?? '';
-                if (!html) html = fmSnapshotHtml || currentDocumentHtml();
-                finish(createHtmlResponse(rememberFmBoardHtml(html, url), 200));
-            } catch {
-                finish(createHtmlResponse(fmSnapshotHtml || rememberFmBoardHtml(currentDocumentHtml(), url), 200));
+                if (!html) return;
+                lastHtml = html;
+                let normalized = rememberFmBoardHtml(html, url);
+                if (looksLikeFmBoardHtml(normalized)) {
+                    finish(createHtmlResponse(normalized, 200));
+                    return;
+                }
+                if (fmBlockedPattern.test(html)) lastBlockedHtml = html;
+            } catch {}
+        };
+        let timer = setTimeout(() => {
+            if (lastBlockedHtml) {
+                finish(createBlockedResponse(lastBlockedHtml, 430, 60));
+                return;
             }
+            if (lastHtml) {
+                finish(createHtmlResponse(lastHtml, 502));
+                return;
+            }
+            finish(createHtmlResponse('', 502));
+        }, 15000);
+        let probe = setInterval(inspect, 500);
+
+        frame.onload = () => {
+            inspect();
         };
         frame.onerror = () => {
-            finish(createHtmlResponse(fmSnapshotHtml || rememberFmBoardHtml(currentDocumentHtml(), url), 502));
+            if (lastBlockedHtml) {
+                finish(createBlockedResponse(lastBlockedHtml, 430, 60));
+                return;
+            }
+            if (lastHtml) {
+                finish(createHtmlResponse(lastHtml, 502));
+                return;
+            }
+            finish(createHtmlResponse('', 502));
         };
 
         root.appendChild(frame);
@@ -718,27 +760,52 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             let sameOrigin = resolvedUrl.startsWith(location.origin + '/');
             if (!sameOrigin || method !== 'GET') return nativeFetch(input, init);
 
+            let nativeResponse = null;
+            let nativeText = '';
+            let nativeBlocked = false;
+            let nativeRetryAfter = 0;
             try {
-                let response = await nativeFetch(input, init);
-                let text = await response.clone().text().catch(() => '');
-                if (response.ok && text && !fmBlockedPattern.test(text)) {
-                    let normalized = rememberFmBoardHtml(text, resolvedUrl);
+                nativeResponse = await nativeFetch(input, init);
+                nativeText = await nativeResponse.clone().text().catch(() => '');
+                nativeRetryAfter = getRetryAfterSeconds(nativeResponse);
+                nativeBlocked = !!nativeText && fmBlockedPattern.test(nativeText);
+                if (nativeResponse.ok && nativeText && !nativeBlocked) {
+                    let normalized = rememberFmBoardHtml(nativeText, resolvedUrl);
                     if (looksLikeFmBoardHtml(normalized)) {
-                        return createHtmlResponse(normalized, response.status);
+                        return createHtmlResponse(normalized, nativeResponse.status);
                     }
                 }
             } catch {}
 
             if (/listStyle=list/i.test(resolvedUrl)) {
-                let html = rememberFmBoardHtml(currentDocumentHtml(), location.href);
-                if (looksLikeFmBoardHtml(html)) {
-                    return createHtmlResponse(html, 200);
+                let frameResponse = await loadHtmlByFrame(resolvedUrl);
+                let frameText = await frameResponse.clone().text().catch(() => '');
+                let frameBlocked = !!frameText && fmBlockedPattern.test(frameText);
+                if (frameResponse.ok && frameText && !frameBlocked) {
+                    let normalized = rememberFmBoardHtml(frameText, resolvedUrl);
+                    if (looksLikeFmBoardHtml(normalized)) {
+                        return createHtmlResponse(normalized, frameResponse.status, getRetryAfterHeaders(getRetryAfterSeconds(frameResponse)));
+                    }
                 }
-                if (fmSnapshotHtml) return createHtmlResponse(fmSnapshotHtml, 200);
-                return loadHtmlByFrame(resolvedUrl);
+                if (nativeResponse) {
+                    if (nativeBlocked) {
+                        return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
+                    }
+                    if (!nativeResponse.ok) {
+                        return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
+                    }
+                    if (nativeText) return createHtmlResponse(nativeText, 502);
+                }
+                if (frameBlocked || !frameResponse.ok) return frameResponse;
+                return createHtmlResponse(frameText, 502);
             }
 
-            if (fmSnapshotHtml) return createHtmlResponse(fmSnapshotHtml, 200);
+            if (nativeResponse) {
+                if (nativeBlocked) {
+                    return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
+                }
+                return nativeResponse;
+            }
             return loadHtmlByFrame(resolvedUrl);
         };
     }
