@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.14-20260323-mobile1';
+    let mobileBuildVersion = '2.4.15-20260323-mobile1';
     let fmSnapshotHtml = '';
     let fmSnapshotUrl = '';
     let fmBlockedUntil = 0;
@@ -346,6 +346,57 @@ main > .chat.fm > .ci-c,
 main > .chat.fm > .cb-c {
     display: none !important;
     visibility: collapse !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .hd {
+    height: 50px !important;
+    padding: 0 12px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .hd .h {
+    font-size: 15px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs {
+    padding: 10px 10px 8px !important;
+    max-height: min(18svh, 148px) !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
+    gap: 8px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs .fm-tab {
+    min-height: 34px !important;
+    padding: 6px 11px !important;
+    font-size: 14px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl,
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt,
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .cml {
+    width: calc(100% - 8px) !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl {
+    padding: 0 4px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt {
+    padding: 8px 9px !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .name,
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .tt {
+    font-size: 16px !important;
+    line-height: 1.6 !important;
+}
+
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .ip,
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .sg,
+html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .cm {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
 }
 
 @media (max-width: 520px) {
@@ -748,6 +799,21 @@ main > .chat.fm > .cb-c {
         if (!node?.style) return;
         node.style.setProperty(name, value, 'important');
     };
+    let updateCompactDeviceFlag = () => {
+        let sizes = [];
+        let addSize = (value) => {
+            let numeric = Number.parseFloat(value);
+            if (Number.isFinite(numeric) && numeric > 0) sizes.push(numeric);
+        };
+        addSize(window.screen?.width);
+        addSize(window.screen?.height);
+        addSize(window.visualViewport?.width);
+        addSize(window.visualViewport?.height);
+        let shortSide = sizes.length ? Math.min(...sizes) : 0;
+        if (document.documentElement) {
+            document.documentElement.dataset.dclivechatCompactDevice = shortSide > 0 && shortSide <= 460 ? '1' : '0';
+        }
+    };
     let hideChatControls = (chat) => {
         for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c', ':scope > .cb-c']) {
             let node = chat?.querySelector(selector);
@@ -991,6 +1057,7 @@ main > .chat.fm > .cb-c {
         if (document.documentElement) {
             document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
         }
+        updateCompactDeviceFlag();
         injectStyle();
         observeMobileLayout();
     };
@@ -999,4 +1066,7 @@ main > .chat.fm > .cb-c {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', startMobilePrelude, { once: true });
     }
+    window.addEventListener('resize', updateCompactDeviceFlag);
+    window.addEventListener('orientationchange', updateCompactDeviceFlag);
+    window.visualViewport?.addEventListener?.('resize', updateCompactDeviceFlag);
 })();
