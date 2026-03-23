@@ -3,8 +3,13 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.11-20260323-mobile1';
+    let mobileBuildVersion = '2.4.13-20260323-mobile1';
     let fmSnapshotHtml = '';
+    let fmSnapshotUrl = '';
+    let fmBlockedUntil = 0;
+    let fmLastListFetchAt = 0;
+    let fmMinListFetchInterval = 15000;
+    let fmShortRetrySeconds = 15;
     let mobileLayoutObserverStarted = false;
     let mobileStyle = `
 body {
@@ -243,43 +248,104 @@ main.co > .chat.fm .cml {
 }
 
 main.co > .chat.fm .chl {
+    align-items: flex-start !important;
     align-self: stretch;
     padding: 0 5px;
     box-sizing: border-box;
 }
 
 main.co > .chat.fm .chl > .tt {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
     width: 100%;
     padding: 7px 10px;
     box-sizing: border-box;
 }
 
 main.co > .chat.fm .chl > .tt > span {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     width: 100%;
-    gap: 8px;
-    align-items: flex-start;
-    justify-content: flex-start;
+    gap: 6px;
+    align-items: baseline !important;
+    justify-content: flex-start !important;
+    align-content: flex-start !important;
+    text-align: left !important;
+    align-self: stretch !important;
+}
+
+main.co > .chat.fm .chl > .tt > span .name,
+main.co > .chat.fm .chl > .tt > span .ip,
+main.co > .chat.fm .chl > .tt > span .sg,
+main.co > .chat.fm .chl > .tt > span .cm {
+    flex: 0 0 auto;
+    align-self: baseline !important;
+    white-space: nowrap !important;
 }
 
 main.co > .chat.fm .chl > .tt > span .name {
-    flex: 0 0 auto;
     font-weight: 700;
 }
 
 main.co > .chat.fm .chl > .tt > span .tt {
-    flex: 1 1 auto;
+    display: block !important;
+    flex: 1 1 0;
     min-width: 0;
-}
-
-main.co > .chat.fm .chl > .tt > span .sg {
-    flex: 0 0 auto;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    line-break: auto !important;
+    align-self: baseline !important;
 }
 
 main.co > .chat.fm > .vp > .page,
 main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     max-width: none !important;
     margin: 0 !important;
+}
+
+main.co > .chat.fm .chl > .tt > span > img.nikcon {
+    flex: 0 0 auto;
+    align-self: baseline !important;
+}
+
+main.co > .chat.fm .chl > .tt > span * {
+    text-align: left !important;
+}
+
+main.co > .chat.fm .cml,
+main.co > .chat.fm .cml > .vp,
+main.co > .chat.fm .cml > .vp > .page,
+main.co > .chat.fm .cml > .vp > .page > .text {
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+}
+
+main.co > .chat.fm .cml .text {
+    width: 100% !important;
+}
+
+main.co > .chat.fm .chl > .tt > span .name,
+main.co > .chat.fm .chl > .tt > span .ip,
+main.co > .chat.fm .chl > .tt > span .sg,
+main.co > .chat.fm .chl > .tt > span .tt {
+    line-height: 1.5 !important;
+}
+
+main > .chat.fm > .li-c,
+main > .chat.fm > .ri-c,
+main > .chat.fm > .ci-c,
+main > .chat.fm > .cb-c {
+    display: none !important;
+    visibility: collapse !important;
 }
 
 @media (max-width: 520px) {
@@ -362,10 +428,14 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         max-height: min(19svh, 136px);
     }
 
-    main.co > .chat.fm > .fm-tabs .fm-tabs-wrap,
-    main > .chat > .vp > .page {
+    main > .chat:not(.fm) > .vp > .page {
         max-width: 860px;
         margin: 0 auto;
+    }
+
+    main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
+        max-width: none !important;
+        margin: 0 !important;
     }
 
     main.co > .chat.fm > .fm-tabs .fm-tab {
@@ -377,15 +447,15 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     main.co > .chat.fm .chl,
     main.co > .chat.fm .chl > .tt,
     main.co > .chat.fm .cml {
-        width: calc(100% - 18px);
+        width: calc(100% - 10px);
     }
 
     main.co > .chat.fm .chl {
-        padding: 0 9px;
+        padding: 0 5px;
     }
 
     main.co > .chat.fm .chl > .tt {
-        padding: 8px 12px;
+        padding: 9px 10px;
     }
 
     main.co > .chat.fm .chl > .tt > span .name,
@@ -531,7 +601,10 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     };
     let rememberFmBoardHtml = (html = '', baseUrl = location.href) => {
         let normalized = normalizeFmBoardHtml(html, baseUrl);
-        if (looksLikeFmBoardHtml(normalized)) fmSnapshotHtml = normalized;
+        if (looksLikeFmBoardHtml(normalized)) {
+            fmSnapshotHtml = normalized;
+            fmSnapshotUrl = baseUrl;
+        }
         return normalized;
     };
     let sanitizeResponseStatus = (status = 200) => {
@@ -555,6 +628,24 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     let getRetryAfterHeaders = (seconds = 0) => seconds > 0 ? {
         'retry-after': String(seconds),
     } : {};
+    let isFmListUrl = (url = '') => /(?:[?&])listStyle=list(?:$|[&#])/i.test(url);
+    let normalizeFmRetryAfter = (seconds = 0) => {
+        let value = Number.parseInt(seconds, 10) || 0;
+        if (value <= 0) return fmShortRetrySeconds;
+        return value;
+    };
+    let holdFmRequests = (seconds = 0) => {
+        let waitSeconds = normalizeFmRetryAfter(seconds);
+        fmBlockedUntil = Math.max(fmBlockedUntil, Date.now() + (waitSeconds * 1000));
+        return waitSeconds;
+    };
+    let clearFmRequestHold = () => {
+        fmBlockedUntil = 0;
+    };
+    let createFmBlockedResponse = (html = '', status = 430, retryAfter = 0) => {
+        let waitSeconds = holdFmRequests(retryAfter);
+        return createBlockedResponse(html, status, waitSeconds);
+    };
     let loadHtmlByFrame = (url) => new Promise((resolve) => {
         let root = document.body || document.documentElement || document.head;
         if (!root) return resolve(createHtmlResponse('', 502));
@@ -582,6 +673,10 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
                 lastHtml = html;
                 let normalized = rememberFmBoardHtml(html, url);
                 if (looksLikeFmBoardHtml(normalized)) {
+                    if (isFmListUrl(url)) {
+                        fmLastListFetchAt = Date.now();
+                        clearFmRequestHold();
+                    }
                     finish(createHtmlResponse(normalized, 200));
                     return;
                 }
@@ -590,7 +685,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         };
         let timer = setTimeout(() => {
             if (lastBlockedHtml) {
-                finish(createBlockedResponse(lastBlockedHtml, 430, 60));
+                finish(createFmBlockedResponse(lastBlockedHtml, 430, fmShortRetrySeconds));
                 return;
             }
             if (lastHtml) {
@@ -598,7 +693,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
                 return;
             }
             finish(createHtmlResponse('', 502));
-        }, 15000);
+        }, 8000);
         let probe = setInterval(inspect, 500);
 
         frame.onload = () => {
@@ -606,7 +701,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         };
         frame.onerror = () => {
             if (lastBlockedHtml) {
-                finish(createBlockedResponse(lastBlockedHtml, 430, 60));
+                finish(createFmBlockedResponse(lastBlockedHtml, 430, fmShortRetrySeconds));
                 return;
             }
             if (lastHtml) {
@@ -631,6 +726,20 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     let setImportantStyle = (node, name, value) => {
         if (!node?.style) return;
         node.style.setProperty(name, value, 'important');
+    };
+    let hideChatControls = (chat) => {
+        for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c', ':scope > .cb-c']) {
+            let node = chat?.querySelector(selector);
+            if (!node) continue;
+            setImportantStyle(node, 'display', 'none');
+            setImportantStyle(node, 'visibility', 'collapse');
+        }
+    };
+    let widenChatPage = (chat) => {
+        let page = chat?.querySelector(':scope > .vp > .page');
+        if (!page) return;
+        setImportantStyle(page, 'max-width', 'none');
+        setImportantStyle(page, 'margin', '0');
     };
     let applyDcLineLayout = (line) => {
         let title = line?.querySelector(':scope > .tt');
@@ -689,17 +798,21 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             setImportantStyle(video, 'display', 'none');
             setImportantStyle(video, 'visibility', 'collapse');
         }
-        for (let selector of [':scope > .li-c', ':scope > .ri-c', ':scope > .ci-c', ':scope > .cb-c']) {
-            let node = chat.querySelector(selector);
-            if (!node) continue;
-            setImportantStyle(node, 'display', 'none');
-            setImportantStyle(node, 'visibility', 'collapse');
-        }
-        let page = chat.querySelector(':scope > .vp > .page');
-        if (page) {
-            setImportantStyle(page, 'max-width', 'none');
-            setImportantStyle(page, 'margin', '0');
-        }
+        hideChatControls(chat);
+        widenChatPage(chat);
+        for (let line of chat.querySelectorAll('.chl')) applyDcLineLayout(line);
+    };
+    let applyFmMobileLayout = () => {
+        if (!isFm) return;
+        let main = document.body?.querySelector(':scope > main') ?? document.querySelector('body > main');
+        if (!main) return;
+        let chat = main.querySelector(':scope > .chat.fm');
+        if (!chat) return;
+
+        document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
+        main.classList.add('co');
+        hideChatControls(chat);
+        widenChatPage(chat);
         for (let line of chat.querySelectorAll('.chl')) applyDcLineLayout(line);
     };
     let queueDcMobileLayout = (() => {
@@ -713,14 +826,30 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             });
         };
     })();
+    let queueFmMobileLayout = (() => {
+        let queued = false;
+        return () => {
+            if (queued || !isFm) return;
+            queued = true;
+            requestAnimationFrame(() => {
+                queued = false;
+                applyFmMobileLayout();
+            });
+        };
+    })();
     let observeMobileLayout = () => {
         if (mobileLayoutObserverStarted) {
-            if (!isFm) queueDcMobileLayout();
+            if (isFm) queueFmMobileLayout();
+            else queueDcMobileLayout();
             return;
         }
         mobileLayoutObserverStarted = true;
-        if (!isFm) queueDcMobileLayout();
-        let observer = new MutationObserver(() => queueDcMobileLayout());
+        if (isFm) queueFmMobileLayout();
+        else queueDcMobileLayout();
+        let observer = new MutationObserver(() => {
+            if (isFm) queueFmMobileLayout();
+            else queueDcMobileLayout();
+        });
         observer.observe(document.documentElement, {
             childList: true,
             subtree: true,
@@ -759,6 +888,18 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
             }
             let sameOrigin = resolvedUrl.startsWith(location.origin + '/');
             if (!sameOrigin || method !== 'GET') return nativeFetch(input, init);
+            let listRequest = isFmListUrl(resolvedUrl);
+            let now = Date.now();
+
+            let sameSnapshotUrl = !!fmSnapshotUrl && fmSnapshotUrl == resolvedUrl;
+
+            if (listRequest && sameSnapshotUrl && fmSnapshotHtml && fmLastListFetchAt && (now - fmLastListFetchAt) < fmMinListFetchInterval) {
+                return createHtmlResponse(fmSnapshotHtml, 200);
+            }
+            if (listRequest && fmBlockedUntil > now) {
+                let waitSeconds = Math.max(1, Math.ceil((fmBlockedUntil - now) / 1000));
+                return createBlockedResponse((sameSnapshotUrl ? fmSnapshotHtml : '') || '에펨코리아 보안 시스템', 430, waitSeconds);
+            }
 
             let nativeResponse = null;
             let nativeText = '';
@@ -772,31 +913,46 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
                 if (nativeResponse.ok && nativeText && !nativeBlocked) {
                     let normalized = rememberFmBoardHtml(nativeText, resolvedUrl);
                     if (looksLikeFmBoardHtml(normalized)) {
+                        if (listRequest) {
+                            fmLastListFetchAt = Date.now();
+                            clearFmRequestHold();
+                        }
                         return createHtmlResponse(normalized, nativeResponse.status);
                     }
                 }
             } catch {}
 
-            if (/listStyle=list/i.test(resolvedUrl)) {
+            if (listRequest) {
+                if (nativeResponse && (nativeBlocked || nativeResponse.status == 429 || nativeResponse.status == 430)) {
+                    return createFmBlockedResponse(nativeText || (sameSnapshotUrl ? fmSnapshotHtml : ''), nativeResponse.status || 430, nativeRetryAfter);
+                }
+                if (nativeResponse && !nativeResponse.ok) {
+                    return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
+                }
                 let frameResponse = await loadHtmlByFrame(resolvedUrl);
                 let frameText = await frameResponse.clone().text().catch(() => '');
                 let frameBlocked = !!frameText && fmBlockedPattern.test(frameText);
                 if (frameResponse.ok && frameText && !frameBlocked) {
                     let normalized = rememberFmBoardHtml(frameText, resolvedUrl);
                     if (looksLikeFmBoardHtml(normalized)) {
+                        fmLastListFetchAt = Date.now();
+                        clearFmRequestHold();
                         return createHtmlResponse(normalized, frameResponse.status, getRetryAfterHeaders(getRetryAfterSeconds(frameResponse)));
                     }
                 }
                 if (nativeResponse) {
                     if (nativeBlocked) {
-                        return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
+                        return createFmBlockedResponse(nativeText || (sameSnapshotUrl ? fmSnapshotHtml : ''), nativeResponse.status || 430, nativeRetryAfter);
                     }
                     if (!nativeResponse.ok) {
                         return createHtmlResponse(nativeText, nativeResponse.status, getRetryAfterHeaders(nativeRetryAfter));
                     }
                     if (nativeText) return createHtmlResponse(nativeText, 502);
                 }
-                if (frameBlocked || !frameResponse.ok) return frameResponse;
+                if (frameBlocked || frameResponse.status == 429 || frameResponse.status == 430) {
+                    return createFmBlockedResponse(frameText || nativeText || (sameSnapshotUrl ? fmSnapshotHtml : ''), frameResponse.status || 430, getRetryAfterSeconds(frameResponse));
+                }
+                if (!frameResponse.ok) return frameResponse;
                 return createHtmlResponse(frameText, 502);
             }
 
@@ -811,6 +967,9 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     }
 
     let startMobilePrelude = () => {
+        if (document.documentElement) {
+            document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
+        }
         injectStyle();
         observeMobileLayout();
     };
