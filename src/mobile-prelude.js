@@ -3,9 +3,10 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.9-20260323-mobile1';
+    let mobileBuildVersion = '2.4.10-20260323-mobile1';
     let fmSnapshotHtml = '';
     let mobileLayoutObserverStarted = false;
+    let mobileViewportWatchStarted = false;
     let mobileStyle = `
 body {
     -webkit-text-size-adjust: 100%;
@@ -282,6 +283,108 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     margin: 0 !important;
 }
 
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .hd {
+    height: 46px;
+    padding: 0 10px;
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .hd .h {
+    font-size: 12px;
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .fm-tabs {
+    padding: 8px 8px 6px;
+    max-height: min(16svh, 112px);
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
+    gap: 6px;
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .fm-tabs .fm-tab {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm .chl > .tt {
+    padding: 6px 9px;
+}
+
+html[data-dclivechat-device-size="compact"] main.co > .chat.fm > .fm-tabs .fm-tab-box {
+    width: 14px;
+    height: 14px;
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat > .vp > .page {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl,
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt,
+html[data-dclivechat-device-size="compact"] main > .chat .cml {
+    width: calc(100% - 8px);
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl {
+    padding: 0 4px;
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt {
+    padding: 8px 9px;
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt > span {
+    gap: 6px;
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt > span .name,
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt > span .tt {
+    font-size: 14px;
+}
+
+html[data-dclivechat-device-size="compact"] main > .chat .chl > .tt > span .sg {
+    font-size: 10px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm > .hd {
+    padding: 0 18px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm > .hd .h {
+    font-size: 14px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm > .fm-tabs {
+    padding: 12px 14px 10px;
+    max-height: min(19svh, 136px);
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm > .fm-tabs .fm-tab {
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl,
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl > .tt,
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .cml {
+    width: calc(100% - 18px);
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl {
+    padding: 0 9px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl > .tt {
+    padding: 8px 12px;
+}
+
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl > .tt > span .name,
+html[data-dclivechat-device-size="medium"] main.co > .chat.fm .chl > .tt > span .tt {
+    font-size: 15px;
+}
+
 @media (max-width: 520px) {
     main.co > .chat.fm > .hd {
         height: 46px;
@@ -362,12 +465,6 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         max-height: min(19svh, 136px);
     }
 
-    main.co > .chat.fm > .fm-tabs .fm-tabs-wrap,
-    main > .chat > .vp > .page {
-        max-width: 860px;
-        margin: 0 auto;
-    }
-
     main.co > .chat.fm > .fm-tabs .fm-tab {
         min-height: 34px;
         padding: 6px 12px;
@@ -394,6 +491,48 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
     }
 }
 
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm > .hd {
+    padding: 0 24px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm > .hd .h {
+    font-size: 15px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm > .fm-tabs {
+    padding: 14px 18px 12px;
+    max-height: min(20svh, 164px);
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
+    gap: 10px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm > .fm-tabs .fm-tab {
+    min-height: 36px;
+    padding: 7px 14px;
+    font-size: 14px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl,
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl > .tt,
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .cml {
+    width: calc(100% - 24px);
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl {
+    padding: 0 12px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl > .tt {
+    padding: 10px 14px;
+}
+
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl > .tt > span .name,
+html[data-dclivechat-device-size="wide"] main.co > .chat.fm .chl > .tt > span .tt {
+    font-size: 16px;
+}
+
 @media (max-height: 540px) {
     main.co > .chat.fm > .fm-tabs {
         max-height: 96px;
@@ -405,6 +544,37 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
 }
 `;
     let currentDocumentHtml = () => document.documentElement?.outerHTML ?? '';
+    let getViewportMetric = (...values) => {
+        let valid = values
+            .map((value) => Number(value))
+            .filter((value) => Number.isFinite(value) && value > 0);
+        if (!valid.length) return 0;
+        return Math.min(...valid);
+    };
+    let getDeviceSizeClass = () => {
+        let physicalShort = getViewportMetric(screen?.width, screen?.height, screen?.availWidth, screen?.availHeight);
+        let viewportShort = getViewportMetric(window.innerWidth, window.innerHeight, window.visualViewport?.width, window.visualViewport?.height);
+        let effectiveShort = getViewportMetric(physicalShort, viewportShort) || Math.max(physicalShort, viewportShort);
+        if (effectiveShort <= 480) return 'compact';
+        if (effectiveShort <= 900) return 'medium';
+        return 'wide';
+    };
+    let applyDeviceSizeClass = () => {
+        document.documentElement.dataset.dclivechatDeviceSize = getDeviceSizeClass();
+    };
+    let watchDeviceSizeClass = () => {
+        if (mobileViewportWatchStarted) {
+            applyDeviceSizeClass();
+            return;
+        }
+        mobileViewportWatchStarted = true;
+        let refresh = () => requestAnimationFrame(applyDeviceSizeClass);
+        applyDeviceSizeClass();
+        window.addEventListener('resize', refresh);
+        window.addEventListener('orientationchange', refresh);
+        window.addEventListener('pageshow', refresh);
+        window.visualViewport?.addEventListener?.('resize', refresh);
+    };
     let parseHtml = (html = '') => {
         try {
             return new DOMParser().parseFromString(html, 'text/html');
@@ -736,7 +906,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
         } catch {}
     }
 
-    if (isAndroid) {
+    if (isAndroid && !isFm) {
         try {
             Object.defineProperty(window, 'Worker', {
                 value: undefined,
@@ -812,6 +982,7 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
 
     let startMobilePrelude = () => {
         injectStyle();
+        watchDeviceSizeClass();
         observeMobileLayout();
     };
 
