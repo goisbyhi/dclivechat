@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '3.0.2-20260324-mobile1';
+    let mobileBuildVersion = '3.0.3-20260324-mobile1';
     let fmSnapshotHtml = '';
     let fmSnapshotUrl = '';
     let fmBlockedUntil = 0;
@@ -1015,13 +1015,19 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .c
             let now = Date.now();
 
             let sameSnapshotUrl = !!fmSnapshotUrl && fmSnapshotUrl == resolvedUrl;
+            let hasWarmSnapshot = listRequest && !!fmSnapshotHtml && !fmLastListFetchAt;
 
             if (listRequest && sameSnapshotUrl && fmSnapshotHtml && fmLastListFetchAt && (now - fmLastListFetchAt) < fmMinListFetchInterval) {
                 return createHtmlResponse(fmSnapshotHtml, 200);
             }
+            if (hasWarmSnapshot) {
+                fmLastListFetchAt = now;
+                clearFmRequestHold();
+                return createHtmlResponse(fmSnapshotHtml, 200);
+            }
             if (listRequest && fmBlockedUntil > now) {
                 let waitSeconds = Math.max(1, Math.ceil((fmBlockedUntil - now) / 1000));
-                return createBlockedResponse((sameSnapshotUrl ? fmSnapshotHtml : '') || '에펨코리아 보안 시스템', 430, waitSeconds);
+                return createBlockedResponse((fmSnapshotHtml || (sameSnapshotUrl ? fmSnapshotHtml : '')) || '에펨코리아 보안 시스템', 430, waitSeconds);
             }
 
             let nativeResponse = null;
