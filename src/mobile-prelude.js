@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.16-20260323-mobile1';
+    let mobileBuildVersion = '2.4.17-20260323-mobile1';
     let fmSnapshotHtml = '';
     let fmSnapshotUrl = '';
     let fmBlockedUntil = 0;
@@ -348,15 +348,6 @@ main > .chat.fm > .cb-c {
     visibility: collapse !important;
 }
 
-html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] {
-    -webkit-text-size-adjust: 130% !important;
-    text-size-adjust: 130% !important;
-}
-
-html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] body {
-    zoom: 1.15 !important;
-}
-
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm > .hd {
     height: 50px !important;
     padding: 0 12px !important;
@@ -398,7 +389,7 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt {
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .name,
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .tt {
     font-size: 16px !important;
-    line-height: 1.35 !important;
+    line-height: 1.6 !important;
 }
 
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .ip,
@@ -406,12 +397,6 @@ html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .s
 html[data-dclivechat-compact-device="1"] main.co > .chat.fm .chl > .tt > span .cm {
     font-size: 11px !important;
     line-height: 1.45 !important;
-}
-
-html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] main.co > .chat.fm > .vp > .page,
-html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
-    max-width: 340px !important;
-    margin: 0 auto !important;
 }
 
 @media (max-width: 520px) {
@@ -814,18 +799,6 @@ html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] main.co > .c
         if (!node?.style) return;
         node.style.setProperty(name, value, 'important');
     };
-    let ensureFmMobileViewport = () => {
-        if (!isFm) return;
-        let root = document.head || document.documentElement || document.body;
-        if (!root) return;
-        let meta = document.querySelector('meta[name="viewport"]');
-        if (!meta) {
-            meta = document.createElement('meta');
-            meta.name = 'viewport';
-            root.appendChild(meta);
-        }
-        meta.setAttribute('content', 'width=360, initial-scale=1');
-    };
     let updateCompactDeviceFlag = () => {
         let sizes = [];
         let addSize = (value) => {
@@ -924,7 +897,6 @@ html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] main.co > .c
         if (!chat) return;
 
         document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
-        document.documentElement.dataset.dclivechatSite = 'fm';
         main.classList.add('co');
         hideChatControls(chat);
         widenChatPage(chat);
@@ -1084,10 +1056,8 @@ html[data-dclivechat-site="fm"][data-dclivechat-compact-device="1"] main.co > .c
     let startMobilePrelude = () => {
         if (document.documentElement) {
             document.documentElement.dataset.dclivechatMobileBuild = mobileBuildVersion;
-            document.documentElement.dataset.dclivechatSite = isFm ? 'fm' : 'dc';
         }
         updateCompactDeviceFlag();
-        ensureFmMobileViewport();
         injectStyle();
         observeMobileLayout();
     };
