@@ -3,7 +3,7 @@
     let isAndroid = /Android/i.test(ua);
     let isFm = /(?:^|\.)fmkorea\.(?:com|net|co\.kr)$/i.test(location.hostname);
     let fmBlockedPattern = /에펨코리아 보안 시스템|잠시 기다리면 사이트에 자동으로 접속됩니다|비정상적인 접근|자동으로 접속/i;
-    let mobileBuildVersion = '2.4.7-20260323-mobile1';
+    let mobileBuildVersion = '2.4.8-20260323-mobile1';
     let fmSnapshotHtml = '';
     let mobileLayoutObserverStarted = false;
     let mobileStyle = `
@@ -113,14 +113,19 @@ main > .chat:not(.fm) .chl > .tt > span .sg,
 main > .chat:not(.fm) .chl > .tt > span .cm {
     flex: 0 0 auto;
     align-self: baseline !important;
+    white-space: nowrap !important;
 }
 
 main > .chat:not(.fm) .chl > .tt > span .tt {
-    display: inline !important;
+    display: block !important;
     flex: 1 1 0;
     min-width: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    line-break: auto !important;
     align-self: baseline !important;
 }
 
@@ -611,13 +616,18 @@ main.co > .chat.fm > .fm-tabs .fm-tabs-wrap {
 
         for (let item of inline.children) {
             if (item.classList.contains('tt')) {
-                setImportantStyle(item, 'display', 'inline');
+                setImportantStyle(item, 'display', 'block');
                 setImportantStyle(item, 'flex', '1 1 0');
                 setImportantStyle(item, 'min-width', '0');
-                setImportantStyle(item, 'white-space', 'normal');
-                setImportantStyle(item, 'overflow-wrap', 'anywhere');
+                setImportantStyle(item, 'white-space', 'nowrap');
+                setImportantStyle(item, 'overflow', 'hidden');
+                setImportantStyle(item, 'text-overflow', 'ellipsis');
+                setImportantStyle(item, 'word-break', 'keep-all');
+                setImportantStyle(item, 'overflow-wrap', 'normal');
+                setImportantStyle(item, 'line-break', 'auto');
             } else {
                 setImportantStyle(item, 'flex', '0 0 auto');
+                setImportantStyle(item, 'white-space', 'nowrap');
             }
             setImportantStyle(item, 'align-self', 'baseline');
             setImportantStyle(item, 'text-align', 'left');
