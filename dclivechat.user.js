@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DCLiveChat
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.8.20260325
+// @version      2.4.9.20260325
 // @description  모바일 Tampermonkey 설치용 DCLiveChat 로더
 // @author       goisbyhi
 // @match        *://gall.dcinside.com/*
@@ -34,74 +34,31 @@
     return mobileUserAgent || coarsePointer || noHover || narrowViewport;
   }
 
-  function redirectMobileFmToDesktop() {
-    if (window.location.hostname !== "m.fmkorea.com") {
-      return false;
+  function patchFmMobileMinScript(scriptText) {
+    if (!isMobile || window.location.hostname !== "m.fmkorea.com") {
+      return scriptText;
     }
 
-    const targetUrl = new URL(window.location.href);
-    const boardMid = getFmBoardMid();
-    targetUrl.protocol = "https:";
-    targetUrl.hostname = "www.fmkorea.com";
-
-    if (boardMid) {
-      targetUrl.searchParams.set("mid", boardMid);
-    }
-
-    window.location.replace(targetUrl.toString());
-    return true;
-  }
-
-  function getFmBoardMid() {
-    const currentUrl = new URL(window.location.href);
-    const path = currentUrl.pathname.replace(/^\/+/, "");
-
-    return (
-      currentUrl.searchParams.get("mid") ||
-      window.currentBoardMid ||
-      window.current_mid ||
-      (/^[A-Za-z0-9_]+$/.test(path) ? path : "")
+    let patchedText = scriptText.replace(
+      "),cr)return Al(v),Dr()?location.href=fi():void 0;",
+      "),cr&&Dr())return Al(v),location.href=fi();"
     );
-  }
 
-  function normalizeDesktopFmUrl() {
-    if (window.location.hostname !== "www.fmkorea.com") {
-      return;
+    const fmBranchStart = patchedText.indexOf('if("fmkorea"==b){');
+    const fmBranchEnd = patchedText.indexOf("let q=await r(t);", fmBranchStart);
+
+    if (fmBranchStart === -1 || fmBranchEnd === -1) {
+      return patchedText;
     }
 
-    const boardMid = getFmBoardMid();
+    const enhancedFmBranch = `if("fmkorea"==b){let r=Date.now();if(r<C)return;let o=await i(t),c=o.text;if(!o.ok||A.test(c)){L++;let t=o.retryAfter;if(!t){let e=429==o.status||430==o.status?60:15;t=Math.min(e*L,300)}return C=r+1e3*t,void e("fm update paused",o.status,t)}if(L=0,C=0,!c)return;c=c.replace(/(\\n|\\r|\\t)/g,"");let s=(e,t)=>{let r=l[e.num]??0;return t&&(e.count=t),!(e.num<=m())||(t!=r&&a(e.num,t),!1)},M=e=>w(((e??"").replace(/<script[\\s\\S]*?<\\/script>/gi," ").replace(/<style[\\s\\S]*?<\\/style>/gi," ").replace(/<[^>]+>/g," "))).replace(/\\s+/g," ").trim(),d=c.match(/<li\\b[^>]*class=(["'])[^"'<>]*\\bclear\\b[^"'<>]*\\1[^>]*>[\\s\\S]*?<\\/li>/gi)??[];if(d.length){for(let e of d){let t=e.match(/<h3[^>]*>[\\s\\S]*?<a[^>]+href=(["'])([^"']+)\\1[^>]*>([\\s\\S]*?)<\\/a>/i);if(!t)continue;let r=x(t[2]);if(!r)continue;let i={num:r,subject:"",title:M(t[3]).replace(/\\s*\\[[0-9]+\\]\\s*$/,""),nickname:"",id:"",ip:"",date:0,img:"",fix:!1,count:0};let o=e.match(/<span[^>]*class=(["'])[^"'<>]*\\bcomment_count\\b[^"'<>]*\\1[^>]*>\\[([0-9]+)\\]<\\/span>/i);if(o&&(i.count=f(o[2])),!s(i,i.count))continue;let n=e.match(/<div[^>]*class=(["'])[^"'<>]*\\binfo\\b[^"'<>]*\\1[^>]*>([\\s\\S]*?)<\\/div>/i);if(n){let e=[...n[2].matchAll(/<span[^>]*>([\\s\\S]*?)<\\/span>/gi)].map(e=>M(e[1]));i.subject=e[1]??"",i.nickname=e[2]??""}i.subject!=g&&v.push(i)}return void await n(v)}d=c.match(/<tr\\b[^>]*>.*?<\\/tr>/gi)??[];for(let e of d){if(/<th\\b/i.test(e)||I(e))continue;let t=_(e);if(!t.href)continue;let r=x(t.href);if(!r)continue;let i={num:r,subject:y(e),title:t.title,nickname:"",id:"",ip:"",date:0,img:"",fix:!1,count:0};if(!s(i,k(e)))continue;let l=O(e);i.nickname=l.name,i.id=l.id,i.img=l.img,i.fix=l.fix,i.subject!=g&&v.push(i)}return void await n(v)}`;
 
-    if (!boardMid) {
-      return;
-    }
+    patchedText =
+      patchedText.slice(0, fmBranchStart) +
+      enhancedFmBranch +
+      patchedText.slice(fmBranchEnd);
 
-    const currentUrl = new URL(window.location.href);
-
-    if (currentUrl.searchParams.get("mid") === boardMid) {
-      return;
-    }
-
-    currentUrl.searchParams.set("mid", boardMid);
-    window.history.replaceState(null, "", currentUrl.toString());
-  }
-
-  async function waitForFmContext() {
-    if (!isMobile || !isFm || window.location.hostname !== "www.fmkorea.com") {
-      return;
-    }
-
-    const startedAt = Date.now();
-
-    while (Date.now() - startedAt < 4000) {
-      const boardMid = getFmBoardMid();
-
-      if (boardMid) {
-        normalizeDesktopFmUrl();
-        return;
-      }
-
-      await new Promise((resolve) => window.setTimeout(resolve, 200));
-    }
+    return patchedText;
   }
 
   function injectMobileOverrides(isDc, isFm) {
@@ -202,21 +159,11 @@
   const isDc = /(^|\.)dcinside\.com$/.test(window.location.hostname);
   const isFm = /(^|\.)fmkorea\.com$/.test(window.location.hostname);
 
-  if (isMobile && isFm && redirectMobileFmToDesktop()) {
-    return;
-  }
-
   if (isMobile) {
     injectMobileOverrides(isDc, isFm);
   }
 
-  if (isMobile && isFm) {
-    normalizeDesktopFmUrl();
-  }
-
-  Promise.resolve()
-    .then(() => waitForFmContext())
-    .then(() => fetch(scriptUrl, { cache: "no-store" }))
+  fetch(scriptUrl, { cache: "no-store" })
     .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -224,7 +171,8 @@
       return response.text();
     })
     .then((scriptText) => {
-      (0, eval)(scriptText);
+      const finalScriptText = patchFmMobileMinScript(scriptText);
+      (0, eval)(finalScriptText);
     })
     .catch((error) => {
       console.error("DCLiveChat 로드 실패", error);
