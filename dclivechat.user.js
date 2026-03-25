@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DCLiveChat
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.10.20260325
+// @version      2.4.11.20260325
 // @description  모바일 Tampermonkey 설치용 DCLiveChat 로더
 // @author       goisbyhi
 // @match        *://gall.dcinside.com/*
@@ -156,6 +156,7 @@
       }
 
       html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tabs {
+        display: block !important;
         width: auto !important;
         margin: 0 8px !important;
         padding: 8px 2px 10px !important;
@@ -165,6 +166,7 @@
         box-sizing: border-box !important;
         -webkit-overflow-scrolling: touch !important;
         scrollbar-width: none !important;
+        text-align: left !important;
       }
 
       html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tabs::-webkit-scrollbar {
@@ -175,9 +177,11 @@
         display: inline-flex !important;
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
+        align-items: flex-start !important;
         gap: 6px !important;
-        min-width: 100% !important;
         width: max-content !important;
+        min-width: max-content !important;
+        max-width: none !important;
         padding: 0 2px !important;
         box-sizing: border-box !important;
       }
