@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DCLiveChat
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.9.20260325
+// @version      2.4.10.20260325
 // @description  모바일 Tampermonkey 설치용 DCLiveChat 로더
 // @author       goisbyhi
 // @match        *://gall.dcinside.com/*
@@ -23,6 +23,10 @@
   const mobileFixClass = "dclivechat-mobile-fix";
   const dcFixClass = "dclivechat-mobile-dc";
   const fmFixClass = "dclivechat-mobile-fm";
+  const fmSiteModeClass = "dclivechat-fm-site-mode";
+  const fmModeSwitchClass = "dclivechat-fm-mode-switch";
+  const fmModeButtonClass = "dclivechat-fm-mode-button";
+  const fmSiteFrameClass = "dclivechat-fm-site-frame";
 
   function isMobileDevice() {
     const mobileUserAgent = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -150,9 +154,240 @@
       html.${mobileFixClass}.${dcFixClass} main .chat:not(.fm) .chl > .tt > span * {
         text-align: left !important;
       }
+
+      html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tabs {
+        width: auto !important;
+        margin: 0 8px !important;
+        padding: 8px 2px 10px !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        max-height: none !important;
+        box-sizing: border-box !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tabs::-webkit-scrollbar {
+        display: none !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tabs-wrap {
+        display: inline-flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
+        min-width: 100% !important;
+        width: max-content !important;
+        padding: 0 2px !important;
+        box-sizing: border-box !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tab {
+        flex: 0 0 auto !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass} main .chat.fm .fm-tab-label {
+        white-space: nowrap !important;
+      }
+
+      body > .${fmModeSwitchClass} {
+        position: fixed !important;
+        left: 50% !important;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 14px) !important;
+        transform: translateX(-50%) !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        gap: 4px !important;
+        padding: 4px !important;
+        border-radius: 999px !important;
+        background: rgba(17, 24, 39, 0.92) !important;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28) !important;
+        backdrop-filter: blur(8px) !important;
+      }
+
+      body > .${fmModeSwitchClass} > .${fmModeButtonClass} {
+        border: 0 !important;
+        border-radius: 999px !important;
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        background: transparent !important;
+        color: rgba(255, 255, 255, 0.72) !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+      }
+
+      body > .${fmModeSwitchClass} > .${fmModeButtonClass}.is-active {
+        background: #ffffff !important;
+        color: #111827 !important;
+      }
+
+      body > .${fmSiteFrameClass} {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border: 0 !important;
+        display: none !important;
+        background: #ffffff !important;
+        z-index: 2147483646 !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass}.${fmSiteModeClass} body {
+        overflow: hidden !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass}.${fmSiteModeClass} body > *:not(script):not(.${fmModeSwitchClass}):not(.${fmSiteFrameClass}) {
+        display: none !important;
+      }
+
+      html.${mobileFixClass}.${fmFixClass}.${fmSiteModeClass} body > .${fmSiteFrameClass} {
+        display: block !important;
+      }
     `;
 
     document.head.appendChild(style);
+  }
+
+  function normalizeUrl(url) {
+    try {
+      return new URL(url, window.location.href).href;
+    } catch {
+      return "";
+    }
+  }
+
+  function getFmMode() {
+    return document.documentElement.classList.contains(fmSiteModeClass) ? "site" : "chat";
+  }
+
+  function getFmSiteFrame() {
+    return document.querySelector(`body > .${fmSiteFrameClass}`);
+  }
+
+  function ensureFmSiteFrame() {
+    let frame = getFmSiteFrame();
+
+    if (frame) {
+      return frame;
+    }
+
+    frame = document.createElement("iframe");
+    frame.className = fmSiteFrameClass;
+    frame.src = window.location.href;
+    frame.title = "FM 일반 화면";
+    frame.setAttribute("loading", "eager");
+    document.body.appendChild(frame);
+    return frame;
+  }
+
+  function getFmSiteFrameUrl() {
+    const frame = getFmSiteFrame();
+
+    if (!frame) {
+      return window.location.href;
+    }
+
+    try {
+      return frame.contentWindow?.location?.href || frame.src || window.location.href;
+    } catch {
+      return frame.src || window.location.href;
+    }
+  }
+
+  function syncFmModeButtons() {
+    const currentMode = getFmMode();
+    const buttons = document.querySelectorAll(
+      `body > .${fmModeSwitchClass} > .${fmModeButtonClass}`
+    );
+
+    for (const button of buttons) {
+      const isActive = button.dataset.mode === currentMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    }
+  }
+
+  function setFmMode(mode) {
+    if (!isMobile || !isFm || !document.body) {
+      return;
+    }
+
+    const nextMode = mode === "site" ? "site" : "chat";
+
+    if (nextMode === "site") {
+      ensureFmSiteFrame();
+      document.documentElement.classList.add(fmSiteModeClass);
+      syncFmModeButtons();
+      return;
+    }
+
+    const frameUrl = normalizeUrl(getFmSiteFrameUrl());
+    const currentUrl = normalizeUrl(window.location.href);
+
+    document.documentElement.classList.remove(fmSiteModeClass);
+    syncFmModeButtons();
+
+    if (frameUrl && currentUrl && frameUrl !== currentUrl) {
+      window.location.href = frameUrl;
+    }
+  }
+
+  function ensureFmModeSwitch() {
+    if (!isMobile || !isFm || !document.body) {
+      return;
+    }
+
+    let switcher = document.querySelector(`body > .${fmModeSwitchClass}`);
+
+    if (!switcher) {
+      switcher = document.createElement("div");
+      switcher.className = fmModeSwitchClass;
+
+      for (const [mode, label] of [
+        ["chat", "채팅"],
+        ["site", "일반"],
+      ]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = fmModeButtonClass;
+        button.dataset.mode = mode;
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          setFmMode(mode);
+        });
+        switcher.appendChild(button);
+      }
+
+      document.body.appendChild(switcher);
+    }
+
+    syncFmModeButtons();
+  }
+
+  function initFmMobileUi() {
+    if (!isMobile || !isFm) {
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 40;
+    const attachUi = () => {
+      attempts += 1;
+      ensureFmModeSwitch();
+
+      if (attempts >= maxAttempts) {
+        window.clearInterval(timerId);
+      }
+    };
+
+    const timerId = window.setInterval(attachUi, 500);
+    attachUi();
+
+    window.addEventListener("pageshow", () => {
+      window.setTimeout(attachUi, 300);
+    });
   }
 
   const isMobile = isMobileDevice();
@@ -173,6 +408,10 @@
     .then((scriptText) => {
       const finalScriptText = patchFmMobileMinScript(scriptText);
       (0, eval)(finalScriptText);
+
+      if (isMobile && isFm) {
+        initFmMobileUi();
+      }
     })
     .catch((error) => {
       console.error("DCLiveChat 로드 실패", error);
