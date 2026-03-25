@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DCLiveChat
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.7.20260325
+// @version      2.4.8.20260325
 // @description  모바일 Tampermonkey 설치용 DCLiveChat 로더
 // @author       goisbyhi
 // @match        *://gall.dcinside.com/*
@@ -40,10 +40,68 @@
     }
 
     const targetUrl = new URL(window.location.href);
+    const boardMid = getFmBoardMid();
     targetUrl.protocol = "https:";
     targetUrl.hostname = "www.fmkorea.com";
+
+    if (boardMid) {
+      targetUrl.searchParams.set("mid", boardMid);
+    }
+
     window.location.replace(targetUrl.toString());
     return true;
+  }
+
+  function getFmBoardMid() {
+    const currentUrl = new URL(window.location.href);
+    const path = currentUrl.pathname.replace(/^\/+/, "");
+
+    return (
+      currentUrl.searchParams.get("mid") ||
+      window.currentBoardMid ||
+      window.current_mid ||
+      (/^[A-Za-z0-9_]+$/.test(path) ? path : "")
+    );
+  }
+
+  function normalizeDesktopFmUrl() {
+    if (window.location.hostname !== "www.fmkorea.com") {
+      return;
+    }
+
+    const boardMid = getFmBoardMid();
+
+    if (!boardMid) {
+      return;
+    }
+
+    const currentUrl = new URL(window.location.href);
+
+    if (currentUrl.searchParams.get("mid") === boardMid) {
+      return;
+    }
+
+    currentUrl.searchParams.set("mid", boardMid);
+    window.history.replaceState(null, "", currentUrl.toString());
+  }
+
+  async function waitForFmContext() {
+    if (!isMobile || !isFm || window.location.hostname !== "www.fmkorea.com") {
+      return;
+    }
+
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < 4000) {
+      const boardMid = getFmBoardMid();
+
+      if (boardMid) {
+        normalizeDesktopFmUrl();
+        return;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 200));
+    }
   }
 
   function injectMobileOverrides(isDc, isFm) {
@@ -59,19 +117,31 @@
 
     const style = document.createElement("style");
     style.textContent = `
-      html.${mobileFixClass} main .chat {
-        grid-template-rows: auto 1fr auto !important;
-      }
-
-      html.${mobileFixClass} main .chat.fm {
-        grid-template-rows: auto auto 1fr auto !important;
-      }
-
       html.${mobileFixClass} main .chat > .li-c,
-      html.${mobileFixClass} main .chat > .ri-c,
-      html.${mobileFixClass} main .chat > .ci-c {
+      html.${mobileFixClass} main .chat > .ri-c {
         display: none !important;
         visibility: collapse !important;
+      }
+
+      html.${mobileFixClass} main .chat > .ci-c {
+        padding-bottom: 12px !important;
+      }
+
+      html.${mobileFixClass} main .chat > .ci-c > .f {
+        width: 100% !important;
+        justify-content: flex-end !important;
+      }
+
+      html.${mobileFixClass} main .chat > .ci-c > .f > .i,
+      html.${mobileFixClass} main .chat > .ci-c > .f > .d,
+      html.${mobileFixClass} main .chat > .ci-c > .f > .up,
+      html.${mobileFixClass} main .chat > .ci-c > .f > .sb {
+        display: none !important;
+        visibility: collapse !important;
+      }
+
+      html.${mobileFixClass} main .chat > .ci-c > .f > .sc {
+        margin-left: auto !important;
       }
 
       html.${mobileFixClass}.${dcFixClass} main .chat:not(.fm) .chl,
@@ -140,7 +210,13 @@
     injectMobileOverrides(isDc, isFm);
   }
 
-  fetch(scriptUrl, { cache: "no-store" })
+  if (isMobile && isFm) {
+    normalizeDesktopFmUrl();
+  }
+
+  Promise.resolve()
+    .then(() => waitForFmContext())
+    .then(() => fetch(scriptUrl, { cache: "no-store" }))
     .then((response) => {
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
