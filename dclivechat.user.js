@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         dclivechat Loader
 // @namespace    https://github.com/goisbyhi/dclivechat
-// @version      2.4.6-20260323
+// @version      2.4.7-20260325
 // @description  Load the latest dclivechat build on supported DCInside and FMKorea pages.
 // @homepageURL  https://github.com/goisbyhi/dclivechat
 // @supportURL   https://github.com/goisbyhi/dclivechat/issues
-// @updateURL    https://goisbyhi.github.io/dclivechat/dclivechat.user.js
-// @downloadURL  https://goisbyhi.github.io/dclivechat/dclivechat.user.js
+// @updateURL    https://raw.githubusercontent.com/goisbyhi/dclivechat/main/dclivechat.user.js
+// @downloadURL  https://raw.githubusercontent.com/goisbyhi/dclivechat/main/dclivechat.user.js
 // @match        https://www.fmkorea.com/*
 // @match        https://m.fmkorea.com/*
 // @match        https://gall.dcinside.com/*
@@ -14,16 +14,19 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      goisbyhi.github.io
+// @connect      raw.githubusercontent.com
 // @run-at       document-idle
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    if (window.__dclivechat_loader_running__) return;
+    const loaderVersion = '2.4.7-20260325';
+    if (window.__dclivechat_loader_running__ && window.__dclivechat_loader_version__ === loaderVersion) return;
     window.__dclivechat_loader_running__ = true;
+    window.__dclivechat_loader_version__ = loaderVersion;
 
-    const sourceUrl = 'https://goisbyhi.github.io/dclivechat/min.js?v=2.4.6-20260323';
+    const sourceUrl = 'https://raw.githubusercontent.com/goisbyhi/dclivechat/main/min.js';
     const fail = () => alert('dclivechat 불러오기에 실패했습니다');
     const inject = (code) => {
         const root = document.head || document.documentElement || document.body;
